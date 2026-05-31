@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../domain/fundamentals.dart';
+import '../domain/price_point.dart';
 import '../domain/quote.dart';
 import '../domain/symbol_search_result.dart';
 import 'market_repository.dart';
@@ -88,6 +89,31 @@ class MockMarketRepository implements MarketRepository {
           '${s.name} — dati dimostrativi generati localmente (modalità demo, '
           'nessuna connessione a Yahoo Finance).',
     );
+  }
+
+  @override
+  Future<PriceHistory> history(String symbol, HistoryRange range) async {
+    await Future.delayed(const Duration(milliseconds: 150));
+    final s = _seedFor(symbol);
+    final days = switch (range) {
+      HistoryRange.oneMonth => 30,
+      HistoryRange.sixMonths => 180,
+      HistoryRange.oneYear => 365,
+    };
+    final step = range == HistoryRange.oneYear ? 7 : 1;
+    final points = <PricePoint>[];
+    final now = DateTime.now();
+    var price = s.price * 0.85; // parte più in basso e cresce con rumore
+    final drift = (s.price - price) / (days / step);
+    final rnd = Random(symbol.hashCode);
+    for (var d = days; d >= 0; d -= step) {
+      price += drift + (rnd.nextDouble() - 0.5) * s.price * 0.02;
+      points.add(PricePoint(
+        date: now.subtract(Duration(days: d)),
+        close: double.parse(price.toStringAsFixed(2)),
+      ));
+    }
+    return PriceHistory(symbol: symbol.toUpperCase(), points: points);
   }
 
   @override

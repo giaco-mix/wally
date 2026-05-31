@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/format.dart';
 import '../../market/domain/fundamentals.dart';
 import '../../market/providers/market_providers.dart';
+import 'widgets/health_score_card.dart';
+import 'widgets/price_history_chart.dart';
 
 class StockDetailScreen extends ConsumerWidget {
   const StockDetailScreen({super.key, required this.symbol});
@@ -64,6 +66,10 @@ class _Body extends StatelessWidget {
               Chip(label: Text(f.industry!), visualDensity: VisualDensity.compact),
           ],
         ),
+        const SizedBox(height: 16),
+        HealthScoreCard(fundamentals: f),
+        const SizedBox(height: 16),
+        PriceHistoryChart(symbol: f.symbol),
         const SizedBox(height: 16),
         LayoutBuilder(builder: (context, c) {
           final cross = c.maxWidth >= 720 ? 3 : (c.maxWidth >= 420 ? 2 : 1);

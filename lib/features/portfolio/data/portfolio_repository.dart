@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/holding.dart';
+import '../domain/portfolio_snapshot.dart';
 
 abstract class PortfolioRepository {
   Future<List<Holding>> fetchHoldings();
@@ -10,7 +11,18 @@ abstract class PortfolioRepository {
   /// Allocazioni target: mappa assetClass.name -> percentuale (0..100).
   Future<Map<String, double>> fetchTargets();
   Future<void> saveTargets(Map<String, double> targets);
+
+  /// Storico del valore del portafoglio (ordinato per data crescente).
+  Future<List<PortfolioSnapshot>> fetchSnapshots();
+
+  /// Registra (o aggiorna) lo snapshot del giorno indicato.
+  Future<void> recordSnapshot(DateTime date, double totalValue);
 }
+
+String _dateKey(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-'
+    '${d.month.toString().padLeft(2, '0')}-'
+    '${d.day.toString().padLeft(2, '0')}';
 
 class SupabasePortfolioRepository implements PortfolioRepository {
   SupabasePortfolioRepository(this._client);
@@ -76,6 +88,30 @@ class SupabasePortfolioRepository implements PortfolioRepository {
       for (final e in targets.entries)
         {'user_id': _uid, 'asset_class': e.key, 'target_pct': e.value},
     ]);
+  }
+
+  @override
+  Future<List<PortfolioSnapshot>> fetchSnapshots() async {
+    final rows = await _client
+        .from('portfolio_snapshots')
+        .select()
+        .order('snapshot_date', ascending: true);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(PortfolioSnapshot.fromMap)
+        .toList();
+  }
+
+  @override
+  Future<void> recordSnapshot(DateTime date, double totalValue) async {
+    await _client.from('portfolio_snapshots').upsert(
+      {
+        'user_id': _uid,
+        'snapshot_date': _dateKey(date),
+        'total_value': totalValue,
+      },
+      onConflict: 'user_id,snapshot_date',
+    );
   }
 }
 
@@ -152,5 +188,37 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   @override
   Future<void> saveTargets(Map<String, double> targets) async {
     _targets = Map.of(targets);
+  }
+
+  final Map<String, PortfolioSnapshot> _snapshots = {};
+  bool _seeded = false;
+
+  void _seedSnapshots() {
+    if (_seeded) return;
+    _seeded = true;
+    final now = DateTime.now();
+    var value = 7000.0;
+    for (var d = 30; d >= 1; d--) {
+      value += (15 - (d % 7) * 4) + (d.isEven ? 25 : -10);
+      final day = now.subtract(Duration(days: d));
+      _snapshots[_dateKey(day)] =
+          PortfolioSnapshot(date: day, totalValue: double.parse(value.toStringAsFixed(2)));
+    }
+  }
+
+  @override
+  Future<List<PortfolioSnapshot>> fetchSnapshots() async {
+    _seedSnapshots();
+    final list = _snapshots.values.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    return list;
+  }
+
+  @override
+  Future<void> recordSnapshot(DateTime date, double totalValue) async {
+    _seedSnapshots();
+    final day = DateTime(date.year, date.month, date.day);
+    _snapshots[_dateKey(day)] =
+        PortfolioSnapshot(date: day, totalValue: totalValue);
   }
 }

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../../../core/config/app_config.dart';
 import '../domain/fundamentals.dart';
+import '../domain/price_point.dart';
 import '../domain/quote.dart';
 import '../domain/symbol_search_result.dart';
 
@@ -12,6 +13,7 @@ abstract class MarketRepository {
   Future<Map<String, Quote>> quotes(List<String> symbols);
   Future<Fundamentals> fundamentals(String symbol);
   Future<List<SymbolSearchResult>> search(String query);
+  Future<PriceHistory> history(String symbol, HistoryRange range);
 }
 
 /// Repository reale: chiama l'edge function Supabase che fa da proxy a Yahoo.
@@ -66,6 +68,16 @@ class YahooMarketRepository implements MarketRepository {
   Future<Fundamentals> fundamentals(String symbol) async {
     final json = await _get('summary', {'symbol': symbol});
     return Fundamentals.fromYahooSummary(symbol, json);
+  }
+
+  @override
+  Future<PriceHistory> history(String symbol, HistoryRange range) async {
+    final json = await _get('chart', {
+      'symbol': symbol,
+      'range': range.range,
+      'interval': range.interval,
+    });
+    return PriceHistory.fromYahooChart(symbol, json);
   }
 
   @override

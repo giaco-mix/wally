@@ -6,6 +6,8 @@ import '../../../shared/format.dart';
 import '../../portfolio/domain/position.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import 'widgets/allocation_pie.dart';
+import 'widgets/performance_chart.dart';
+import 'widgets/rebalance_alert.dart';
 import 'widgets/summary_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -78,6 +80,7 @@ class _DashboardBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        const RebalanceAlert(),
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -124,6 +127,8 @@ class _DashboardBody extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        PerformanceChart(currentValue: totalValue),
       ],
     );
   }

@@ -85,8 +85,21 @@ Deno.serve(async (req: Request) => {
     switch (action) {
       case "chart": {
         if (!symbol) return json({ error: "symbol mancante" }, 400);
+        // range/interval opzionali (default 5d/1d, retro-compatibile con le
+        // quotazioni). Usati per il grafico storico (es. 1mo, 6mo, 1y).
+        const allowedRange = new Set([
+          "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "max",
+        ]);
+        const allowedInterval = new Set([
+          "1m", "5m", "15m", "1h", "1d", "1wk", "1mo",
+        ]);
+        const range = url.searchParams.get("range") ?? "5d";
+        const interval = url.searchParams.get("interval") ?? "1d";
+        if (!allowedRange.has(range) || !allowedInterval.has(interval)) {
+          return json({ error: "range/interval non validi" }, 400);
+        }
         const data = await fetchJson(
-          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`,
+          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`,
         );
         return json(data);
       }

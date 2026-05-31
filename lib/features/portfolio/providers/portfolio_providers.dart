@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../market/domain/quote.dart';
 import '../domain/holding.dart';
+import '../domain/portfolio_snapshot.dart';
 import '../domain/position.dart';
 
 /// Lista delle posizioni inserite dall'utente (CRUD).
@@ -66,5 +67,33 @@ class TargetsController extends AsyncNotifier<Map<String, double>> {
     await ref.read(portfolioRepositoryProvider).saveTargets(targets);
     ref.invalidateSelf();
     await future;
+  }
+}
+
+/// Storico del valore del portafoglio per la curva di performance.
+final performanceControllerProvider =
+    AsyncNotifierProvider<PerformanceController, List<PortfolioSnapshot>>(
+        PerformanceController.new);
+
+class PerformanceController extends AsyncNotifier<List<PortfolioSnapshot>> {
+  double? _lastRecorded;
+
+  @override
+  Future<List<PortfolioSnapshot>> build() async {
+    return ref.watch(portfolioRepositoryProvider).fetchSnapshots();
+  }
+
+  /// Registra lo snapshot di oggi se il valore è cambiato in modo
+  /// significativo rispetto all'ultimo registrato in questa sessione.
+  Future<void> recordToday(double totalValue) async {
+    if (totalValue <= 0) return;
+    if (_lastRecorded != null && (_lastRecorded! - totalValue).abs() < 0.01) {
+      return;
+    }
+    _lastRecorded = totalValue;
+    await ref
+        .read(portfolioRepositoryProvider)
+        .recordSnapshot(DateTime.now(), totalValue);
+    ref.invalidateSelf();
   }
 }
