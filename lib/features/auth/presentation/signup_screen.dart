@@ -63,8 +63,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       loading: _loading,
       primaryLabel: 'Registrati',
       onSubmit: _submit,
-      onGoogle: () =>
-          ref.read(authControllerProvider.notifier).signInWithGoogle(),
+      // Google auth temporaneamente disabilitato: ripristina `onGoogle` per
+      // riattivare il pulsante "Continua con Google".
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

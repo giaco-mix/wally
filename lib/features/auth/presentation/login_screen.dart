@@ -56,8 +56,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       loading: _loading,
       primaryLabel: 'Accedi',
       onSubmit: _submit,
-      onGoogle: () =>
-          ref.read(authControllerProvider.notifier).signInWithGoogle(),
+      // Google auth temporaneamente disabilitato: ripristina `onGoogle` per
+      // riattivare il pulsante "Continua con Google".
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
