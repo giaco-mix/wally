@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/analysis/presentation/analysis_screen.dart';
 import '../../features/analysis/presentation/stock_detail_screen.dart';
+import '../../features/auth/presentation/account_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
@@ -61,6 +62,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                     StockDetailScreen(symbol: state.pathParameters['symbol']!),
               ),
             ],
+          ),
+          GoRoute(
+            path: '/account',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: AccountScreen()),
           ),
         ],
       ),

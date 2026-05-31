@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/config/app_config.dart';
-import '../../features/auth/providers/auth_providers.dart';
 
 class _Destination {
   const _Destination(this.label, this.icon, this.selectedIcon, this.path);
@@ -19,6 +18,7 @@ const _destinations = [
       Icons.account_balance_wallet, '/portfolio'),
   _Destination('Ribilancia', Icons.balance_outlined, Icons.balance, '/rebalance'),
   _Destination('Analisi', Icons.insights_outlined, Icons.insights, '/analysis'),
+  _Destination('Account', Icons.person_outline, Icons.person, '/account'),
 ];
 
 class AppShell extends ConsumerWidget {
@@ -51,15 +51,6 @@ class AppShell extends ConsumerWidget {
               leading: const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Icon(Icons.savings, size: 32),
-              ),
-              trailing: Expanded(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _LogoutButton(),
-                  ),
-                ),
               ),
               destinations: [
                 for (final d in _destinations)
@@ -146,14 +137,3 @@ class _DemoBanner extends StatelessWidget {
   }
 }
 
-class _LogoutButton extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (!AppConfig.isConfigured) return const SizedBox.shrink();
-    return IconButton(
-      tooltip: 'Esci',
-      icon: const Icon(Icons.logout),
-      onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
-    );
-  }
-}
