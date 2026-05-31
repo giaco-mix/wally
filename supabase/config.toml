@@ -1,0 +1,10 @@
+# Configurazione progetto Supabase (letta dalla CLI e dalla GitHub Integration).
+# `project_id` è l'identificativo locale del progetto. Se la GitHub Integration
+# segnala un mismatch, sostituiscilo con il project-ref del tuo progetto
+# (lo trovi in Project Settings → General, o nell'URL della dashboard).
+project_id = "wally"
+
+# La function "yahoo" è un proxy pubblico di sola lettura verso Yahoo Finance:
+# disabilitiamo la verifica del JWT così è raggiungibile con la sola chiave anon.
+[functions.yahoo]
+verify_jwt = false
