@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/config/app_config.dart';
+
 /// Layout condiviso per login e registrazione.
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
@@ -12,6 +14,7 @@ class AuthScaffold extends StatelessWidget {
     required this.primaryLabel,
     required this.onSubmit,
     required this.footer,
+    this.onGoogle,
     this.error,
     this.loading = false,
   });
@@ -24,6 +27,7 @@ class AuthScaffold extends StatelessWidget {
   final String primaryLabel;
   final VoidCallback onSubmit;
   final Widget footer;
+  final VoidCallback? onGoogle;
   final String? error;
   final bool loading;
 
@@ -41,8 +45,8 @@ class AuthScaffold extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.savings, size: 56),
-                  const SizedBox(height: 16),
+                  const _WallyWordmark(),
+                  const SizedBox(height: 24),
                   Text(title, style: Theme.of(context).textTheme.headlineSmall,
                       textAlign: TextAlign.center),
                   const SizedBox(height: 4),
@@ -91,6 +95,19 @@ class AuthScaffold extends StatelessWidget {
                           )
                         : Text(primaryLabel),
                   ),
+                  if (onGoogle != null && AppConfig.isConfigured) ...[
+                    const SizedBox(height: 16),
+                    const _OrDivider(),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: loading ? null : onGoogle,
+                      icon: const Icon(Icons.g_mobiledata, size: 28),
+                      label: const Text('Continua con Google'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   footer,
                 ],
@@ -99,6 +116,56 @@ class AuthScaffold extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Wordmark del brand: icona + "Wally".
+class _WallyWordmark extends StatelessWidget {
+  const _WallyWordmark();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Icon(Icons.savings, size: 36, color: scheme.onPrimaryContainer),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Wally',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+                color: scheme.primary,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text('oppure',
+              style: Theme.of(context).textTheme.bodySmall),
+        ),
+        const Expanded(child: Divider()),
+      ],
     );
   }
 }

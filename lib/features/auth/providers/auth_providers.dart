@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -46,6 +47,16 @@ class AuthController extends AsyncNotifier<void> {
       await _client.auth.signUp(email: email, password: password);
     });
     if (state.hasError) throw state.error!;
+  }
+
+  /// Avvia il flusso OAuth con Google. Su web reindirizza l'intera pagina a
+  /// Google e poi ritorna all'origine corrente; al rientro `onAuthStateChange`
+  /// aggiorna la sessione e il router porta in dashboard.
+  Future<void> signInWithGoogle() async {
+    await _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: kIsWeb ? Uri.base.origin : null,
+    );
   }
 
   Future<void> signOut() async {

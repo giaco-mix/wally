@@ -56,6 +56,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       loading: _loading,
       primaryLabel: 'Accedi',
       onSubmit: _submit,
+      onGoogle: () =>
+          ref.read(authControllerProvider.notifier).signInWithGoogle(),
       footer: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

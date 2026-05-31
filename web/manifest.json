@@ -1,11 +1,11 @@
 {
-    "name": "Finance Companion",
-    "short_name": "Finance",
+    "name": "Wally — alleato finanziario",
+    "short_name": "Wally",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#1565C0",
     "theme_color": "#1565C0",
-    "description": "Companion finanziario: monitora, analizza e ribilancia il tuo portafoglio con analisi fondamentale.",
+    "description": "Wally, il tuo alleato per investire con metodo: monitora, analizza e ribilancia il portafoglio con analisi fondamentale.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
