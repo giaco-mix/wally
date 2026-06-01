@@ -10,41 +10,49 @@
 |---|---|
 | **Nome** | **Wally** |
 | **Etimologia** | *Wallet* + *Ally* — il portafoglio che diventa un alleato |
-| **Categoria** | Companion finanziario per investitori retail |
-| **One-liner** | *Il tuo alleato per investire con metodo.* |
-| **Tagline alternative** | "Ribilancia. Capisci. Cresci." · "Il portafoglio, ma con un piano." |
+| **Categoria** | Companion di **finanza comportamentale** per investitori retail |
+| **One-liner** | *Il coach che ti tiene investito.* |
+| **Tagline alternative** | "Non mollare. Ci penso io." · "Trasforma le emozioni in un piano." · "Diventa un not-quitter." |
 
 ### Mission
-Rendere la gestione consapevole del portafoglio semplice e accessibile a chiunque, unendo **ribilanciamento guidato** e **analisi fondamentale** comprensibile, senza il gergo e i costi degli strumenti professionali.
+Ridurre il **behavior gap** degli investitori retail: aiutarli a definire un piano, restare disciplinati e **non mollare** nei momenti di paura, con un supporto umano e accessibile — senza gergo, senza costi da strumenti pro, senza gestire i loro soldi al posto loro.
 
 ### Vision
-Un mondo in cui ogni piccolo investitore prende decisioni con la stessa chiarezza di un professionista, capendo *cosa* possiede, *perché* e *cosa fare dopo*.
+Un investitore che, grazie a Wally, attraversa le crisi **restando nel piano** e raccoglie i frutti del lungo periodo: un *not-quitter*.
 
 ### Valori
-- **Chiarezza prima di tutto** — niente gergo inutile, ogni numero ha una spiegazione.
-- **Metodo, non scommesse** — promuoviamo disciplina e diversificazione, mai l'hype.
-- **Trasparenza** — mostriamo i dati e i loro limiti; non vendiamo prodotti finanziari.
-- **Rispetto** — Wally informa, non sostituisce il giudizio dell'utente né fa consulenza.
+- **Empatia** — capiamo la paura; non la giudichiamo, la accompagniamo.
+- **Disciplina serena** — metodo e PAC contro l'impulso; mai l'hype.
+- **Chiarezza** — niente gergo, ogni numero (e ogni emozione) ha una spiegazione.
+- **Trasparenza** — mostriamo dati, costi e limiti; non vendiamo prodotti finanziari.
+- **Rispetto** — Wally informa e sostiene, non sostituisce il giudizio dell'utente né fa consulenza regolamentata.
 
 ---
 
 ## 2. Personalità & Tone of Voice
 
-Wally è il **collega esperto e tranquillo** che ti spiega le cose senza farti sentire ignorante.
+Wally è il **coach amichevole** — parte allenatore, parte amico esperto — che ti tiene calmo quando il mercato fa paura e ti spinge a non mollare il piano.
 
 | È | Non è |
 |---|---|
-| Chiaro, concreto | Accademico, prolisso |
-| Rassicurante | Paternalistico |
-| Competente | Saccente |
-| Onesto sui rischi | Promotore di rendimenti |
-| Caldo e umano | Freddo o robotico |
+| Empatico, incoraggiante | Paternalistico |
+| Calmo nei momenti di panico | Allarmista |
+| Simpatico, umano | Freddo o robotico |
+| Onesto sui rischi e sui costi | Promotore di rendimenti |
+| Motivante ("non mollare") | Pressante o colpevolizzante |
 
 **Regole di copy**
-- Dai del "tu", tono amichevole ma professionale.
-- Una frase, un concetto. Preferisci numeri spiegati a numeri nudi.
-- Mai linguaggio che suggerisca consulenza finanziaria o garanzie ("compra ora", "rendimento sicuro"). Usa "potresti valutare", "in base alla tua allocazione target".
-- Disclaimer sempre presente dove si mostrano dati di mercato: *"Le informazioni hanno scopo puramente informativo e non costituiscono consulenza finanziaria."*
+- Dai del "tu", tono caldo e simpatico; celebra i progressi.
+- **Linguaggio del rischio friendly**: *prudente / equilibrato / aggressivo*, mai "rischioso/pericoloso". Spiega con scenari concreti.
+- **Nei cali**: prima l'emozione ("è normale avere paura"), poi il contesto ("nel 2020 il mercato recuperò in N mesi"), poi il freno gentile. Mai "vendi/compra ora".
+- **Commitment positivo**: usa riferimenti al passato dell'utente ("3 mesi fa eri preoccupato e sei rimasto: guarda ora") e proiezioni del traguardo.
+- Mai linguaggio da consulenza personalizzata o garanzie. Preferisci "in base al tuo piano", "molti investitori nella tua situazione".
+- Disclaimer sempre presente dove si mostrano dati/azioni: *"Informazioni a scopo educativo, non costituiscono consulenza finanziaria."*
+
+**Esempi di micro-copy**
+- Calo di mercato: *"Giornata rossa. È normale sentirsi nervosi — ma il tuo piano è pensato proprio per questo. Vuoi vedere cosa successe nelle ultime correzioni?"*
+- PAC eseguito: *"Versamento fatto 💪 Stai comprando più quote proprio mentre costano meno. Questo è essere un not-quitter."*
+- Sbilanciamento: *"Il titolo X è cresciuto tanto e ora pesa troppo. Possiamo riportare il piano in equilibrio col prossimo versamento."*
 
 ---
 
