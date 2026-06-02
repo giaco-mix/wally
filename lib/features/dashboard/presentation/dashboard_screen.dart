@@ -7,6 +7,7 @@ import '../../portfolio/domain/position.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import 'widgets/allocation_pie.dart';
 import 'widgets/performance_chart.dart';
+import 'widgets/plan_card.dart';
 import 'widgets/rebalance_alert.dart';
 import 'widgets/summary_card.dart';
 
@@ -80,6 +81,8 @@ class _DashboardBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        const PlanCard(),
+        const SizedBox(height: 8),
         const RebalanceAlert(),
         Wrap(
           spacing: 12,

@@ -9,6 +9,8 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/plan/presentation/onboarding_screen.dart';
+import '../../features/plan/presentation/plan_screen.dart';
 import '../../features/portfolio/presentation/portfolio_screen.dart';
 import '../../features/rebalance/presentation/rebalance_screen.dart';
 import '../../shared/widgets/app_shell.dart';
@@ -32,6 +34,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (_, _) => const SignupScreen()),
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, _) => const OnboardingScreen(),
+      ),
       ShellRoute(
         navigatorKey: shellKey,
         builder: (context, state, child) => AppShell(child: child),
@@ -62,6 +68,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                     StockDetailScreen(symbol: state.pathParameters['symbol']!),
               ),
             ],
+          ),
+          GoRoute(
+            path: '/plan',
+            pageBuilder: (_, _) => const NoTransitionPage(child: PlanScreen()),
           ),
           GoRoute(
             path: '/account',
