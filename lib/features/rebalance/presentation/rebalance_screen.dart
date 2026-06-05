@@ -6,6 +6,7 @@ import '../../../shared/format.dart';
 import '../../portfolio/domain/holding.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import '../domain/rebalance.dart';
+import '../domain/rebalance_settings.dart';
 import '../providers/rebalance_providers.dart';
 
 class RebalanceScreen extends ConsumerWidget {
@@ -23,12 +24,96 @@ class RebalanceScreen extends ConsumerWidget {
         data: (p) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            const _ScheduleCard(),
+            const SizedBox(height: 16),
             const _TargetEditor(),
             const SizedBox(height: 16),
             _PlanCard(plan: p),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ScheduleCard extends ConsumerWidget {
+  const _ScheduleCard();
+
+  String _fmtDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/'
+      '${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(rebalanceSettingsControllerProvider);
+    return async.when(
+      loading: () => const Card(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (e, _) => Card(
+          child: Padding(padding: const EdgeInsets.all(16), child: Text('Errore: $e'))),
+      data: (s) {
+        final scheme = Theme.of(context).colorScheme;
+        final notifier = ref.read(rebalanceSettingsControllerProvider.notifier);
+        return Card(
+          color: s.isDue ? scheme.errorContainer : null,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.event_repeat, color: scheme.primary),
+                    const SizedBox(width: 8),
+                    Text('Ribilanciamento periodico',
+                        style: Theme.of(context).textTheme.titleMedium),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Ribilanciare a intervalli regolari aiuta a mantenere la rotta '
+                  'senza farsi guidare dall\'emotività.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final f in RebalanceFrequency.values)
+                      ChoiceChip(
+                        label: Text(f.label),
+                        selected: s.frequency == f,
+                        onSelected: (_) => notifier.setFrequency(f),
+                      ),
+                  ],
+                ),
+                if (s.frequency != RebalanceFrequency.none) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    s.isDue
+                        ? '⏰ È ora di ribilanciare!'
+                        : 'Prossimo controllo: ${s.nextDate != null ? _fmtDate(s.nextDate!) : '—'}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: s.isDue ? scheme.onErrorContainer : null,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => notifier.markRebalanced(),
+                    icon: const Icon(Icons.check),
+                    label: const Text('Segna come ribilanciato oggi'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

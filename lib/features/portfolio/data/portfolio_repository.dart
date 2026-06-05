@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../rebalance/domain/rebalance_settings.dart';
 import '../domain/broker.dart';
 import '../domain/holding.dart';
 import '../domain/portfolio_snapshot.dart';
@@ -23,6 +24,10 @@ abstract class PortfolioRepository {
   Future<List<Broker>> fetchBrokers();
   Future<void> upsertBroker(Broker broker);
   Future<void> deleteBroker(String id);
+
+  /// Impostazioni di ribilanciamento schedulato.
+  Future<RebalanceSettings> fetchRebalanceSettings();
+  Future<void> saveRebalanceSettings(RebalanceSettings settings);
 }
 
 String _dateKey(DateTime d) =>
@@ -144,6 +149,32 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   @override
   Future<void> deleteBroker(String id) async {
     await _client.from('brokers').delete().eq('id', int.parse(id));
+  }
+
+  @override
+  Future<RebalanceSettings> fetchRebalanceSettings() async {
+    final row = await _client
+        .from('rebalance_settings')
+        .select()
+        .eq('user_id', _uid)
+        .maybeSingle();
+    if (row == null) return const RebalanceSettings();
+    return RebalanceSettings.fromMap(row);
+  }
+
+  @override
+  Future<void> saveRebalanceSettings(RebalanceSettings settings) async {
+    await _client.from('rebalance_settings').upsert(
+      {
+        'user_id': _uid,
+        'frequency': settings.frequency.name,
+        'last_rebalanced_at': settings.lastRebalancedAt == null
+            ? null
+            : _dateKey(settings.lastRebalancedAt!),
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      onConflict: 'user_id',
+    );
   }
 }
 
@@ -288,5 +319,16 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   @override
   Future<void> deleteBroker(String id) async {
     _brokers.removeWhere((b) => b.id == id);
+  }
+
+  RebalanceSettings _rebalanceSettings = const RebalanceSettings();
+
+  @override
+  Future<RebalanceSettings> fetchRebalanceSettings() async =>
+      _rebalanceSettings;
+
+  @override
+  Future<void> saveRebalanceSettings(RebalanceSettings settings) async {
+    _rebalanceSettings = settings;
   }
 }

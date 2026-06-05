@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/format.dart';
 import '../../portfolio/domain/position.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
+import '../../rebalance/providers/rebalance_providers.dart';
 import 'widgets/allocation_pie.dart';
 import 'widgets/costs_card.dart';
 import 'widgets/performance_chart.dart';
@@ -23,6 +25,7 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+          _NotificationBell(count: ref.watch(notificationsProvider).length),
           IconButton(
             tooltip: 'Aggiorna',
             icon: const Icon(Icons.refresh),
@@ -50,6 +53,22 @@ class DashboardScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+}
+
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = IconButton(
+      tooltip: 'Avvisi',
+      icon: const Icon(Icons.notifications_outlined),
+      onPressed: () => context.go('/notifications'),
+    );
+    if (count == 0) return icon;
+    return Badge.count(count: count, child: icon);
   }
 }
 

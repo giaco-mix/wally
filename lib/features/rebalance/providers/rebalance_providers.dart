@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/providers.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
+import '../../../shared/format.dart';
 import '../domain/rebalance.dart';
+import '../domain/rebalance_settings.dart';
+import '../domain/wally_notification.dart';
 
 final rebalancePlanProvider = Provider<AsyncValue<RebalancePlan>>((ref) {
   final positions = ref.watch(positionsProvider);
@@ -33,4 +37,93 @@ final rebalanceAlertsProvider = Provider<List<RebalanceRow>>((ref) {
       .toList()
     ..sort((a, b) => b.deviationPct.abs().compareTo(a.deviationPct.abs()));
   return out;
+});
+
+/// Impostazioni di ribilanciamento schedulato (cadenza + ultima data).
+final rebalanceSettingsControllerProvider =
+    AsyncNotifierProvider<RebalanceSettingsController, RebalanceSettings>(
+        RebalanceSettingsController.new);
+
+class RebalanceSettingsController extends AsyncNotifier<RebalanceSettings> {
+  @override
+  Future<RebalanceSettings> build() async {
+    return ref.watch(portfolioRepositoryProvider).fetchRebalanceSettings();
+  }
+
+  /// Imposta la cadenza; se non c'è ancora una data base, parte da oggi.
+  Future<void> setFrequency(RebalanceFrequency freq) async {
+    final current = state.asData?.value ?? const RebalanceSettings();
+    final next = RebalanceSettings(
+      frequency: freq,
+      lastRebalancedAt: current.lastRebalancedAt ??
+          (freq == RebalanceFrequency.none ? null : DateTime.now()),
+    );
+    await ref.read(portfolioRepositoryProvider).saveRebalanceSettings(next);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  /// Segna il ribilanciamento come effettuato oggi.
+  Future<void> markRebalanced() async {
+    final current = state.asData?.value ?? const RebalanceSettings();
+    final next = current.copyWith(lastRebalancedAt: DateTime.now());
+    await ref.read(portfolioRepositoryProvider).saveRebalanceSettings(next);
+    ref.invalidateSelf();
+    await future;
+  }
+}
+
+/// Notifiche/avvisi in-app generati dallo stato attuale: promemoria di
+/// ribilanciamento schedulato + asset class sbilanciate (con titolo trainante).
+final notificationsProvider = Provider<List<WallyNotification>>((ref) {
+  final notifications = <WallyNotification>[];
+
+  // 1) Promemoria schedulato
+  final settings = ref.watch(rebalanceSettingsControllerProvider).asData?.value;
+  if (settings != null && settings.isDue) {
+    notifications.add(WallyNotification(
+      id: 'schedule',
+      severity: NotificationSeverity.warning,
+      title: 'È ora di ribilanciare',
+      body: 'Secondo la tua cadenza ${settings.frequency.label.toLowerCase()} '
+          'è il momento di dare un\'occhiata e riportare il piano in equilibrio.',
+      route: '/rebalance',
+      actionLabel: 'Ribilancia',
+    ));
+  }
+
+  // 2) Asset class fuori soglia, con il titolo che pesa di più
+  final alerts = ref.watch(rebalanceAlertsProvider);
+  final positions = ref.watch(positionsProvider).asData?.value ?? const [];
+  for (final r in alerts) {
+    final inClass = positions
+        .where((p) => p.holding.assetClass == r.assetClass)
+        .toList()
+      ..sort((a, b) => b.marketValue.compareTo(a.marketValue));
+    final top = inClass.isEmpty ? null : inClass.first.holding;
+    final over = r.deviationPct > 0;
+    final String body;
+    if (over && top != null) {
+      body = '${top.symbol} è cresciuto e la tua quota '
+          '${r.assetClass.label} è al ${Fmt.pct(r.currentPct)} '
+          '(target ${Fmt.pct(r.targetPct)}). Valuta di alleggerire o di '
+          'comprare altro col prossimo versamento.';
+    } else {
+      body = 'La tua quota ${r.assetClass.label} è al ${Fmt.pct(r.currentPct)} '
+          '(target ${Fmt.pct(r.targetPct)}). Valuta di rinforzarla, magari '
+          'col prossimo versamento del PAC.';
+    }
+    notifications.add(WallyNotification(
+      id: 'dev_${r.assetClass.name}',
+      severity: NotificationSeverity.warning,
+      title: over
+          ? '${r.assetClass.label} sopra il target'
+          : '${r.assetClass.label} sotto il target',
+      body: body,
+      route: '/rebalance',
+      actionLabel: 'Vai al ribilanciamento',
+    ));
+  }
+
+  return notifications;
 });
