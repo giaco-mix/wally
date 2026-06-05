@@ -33,7 +33,9 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
   late final TextEditingController _name;
   late final TextEditingController _qty;
   late final TextEditingController _price;
+  late final TextEditingController _ter;
   late AssetClass _assetClass;
+  late DistributionPolicy _distribution;
   bool _saving = false;
 
   bool get _isEdit => widget.existing != null;
@@ -46,7 +48,10 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
     _name = TextEditingController(text: h?.name ?? '');
     _qty = TextEditingController(text: h?.quantity.toString() ?? '');
     _price = TextEditingController(text: h?.avgPrice.toString() ?? '');
+    _ter = TextEditingController(
+        text: (h != null && h.ter > 0) ? h.ter.toString() : '');
     _assetClass = h?.assetClass ?? AssetClass.stock;
+    _distribution = h?.distribution ?? DistributionPolicy.none;
   }
 
   @override
@@ -55,6 +60,7 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
     _name.dispose();
     _qty.dispose();
     _price.dispose();
+    _ter.dispose();
     super.dispose();
   }
 
@@ -63,6 +69,7 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
     setState(() => _saving = true);
     final qty = double.parse(_qty.text.replaceAll(',', '.'));
     final price = double.parse(_price.text.replaceAll(',', '.'));
+    final ter = double.tryParse(_ter.text.replaceAll(',', '.')) ?? 0;
     final holding = Holding(
       id: widget.existing?.id ?? '',
       symbol: _symbol.text.trim().toUpperCase(),
@@ -71,6 +78,8 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
       avgPrice: price,
       assetClass: _assetClass,
       sector: widget.existing?.sector,
+      ter: ter,
+      distribution: _distribution,
     );
     try {
       await ref.read(holdingsControllerProvider.notifier).save(holding);
@@ -160,6 +169,40 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
                   DropdownMenuItem(value: ac, child: Text(ac.label)),
               ],
               onChanged: (v) => setState(() => _assetClass = v ?? _assetClass),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _ter,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'TER % (opzionale)',
+                      hintText: 'es. 0.20',
+                      suffixText: '%',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<DistributionPolicy>(
+                    initialValue: _distribution,
+                    decoration: const InputDecoration(labelText: 'Dividendi'),
+                    items: [
+                      for (final d in DistributionPolicy.values)
+                        DropdownMenuItem(value: d, child: Text(d.label)),
+                    ],
+                    onChanged: (v) =>
+                        setState(() => _distribution = v ?? _distribution),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             Row(

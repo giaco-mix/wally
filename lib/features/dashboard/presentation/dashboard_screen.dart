@@ -6,6 +6,7 @@ import '../../../shared/format.dart';
 import '../../portfolio/domain/position.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import 'widgets/allocation_pie.dart';
+import 'widgets/costs_card.dart';
 import 'widgets/performance_chart.dart';
 import 'widgets/plan_card.dart';
 import 'widgets/rebalance_alert.dart';
@@ -132,6 +133,8 @@ class _DashboardBody extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         PerformanceChart(currentValue: totalValue),
+        const SizedBox(height: 16),
+        const CostsCard(),
       ],
     );
   }

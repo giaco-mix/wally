@@ -16,6 +16,23 @@ enum AssetClass {
       );
 }
 
+/// Politica dei dividendi di un fondo/ETF.
+enum DistributionPolicy {
+  none('—', ''),
+  accumulating('Accumulazione', 'ACC'),
+  distributing('Distribuzione', 'DIST');
+
+  const DistributionPolicy(this.label, this.short);
+  final String label;
+  final String short;
+
+  static DistributionPolicy fromName(String? name) =>
+      DistributionPolicy.values.firstWhere(
+        (e) => e.name == name,
+        orElse: () => DistributionPolicy.none,
+      );
+}
+
 /// Una posizione del portafoglio inserita dall'utente.
 class Holding {
   const Holding({
@@ -26,6 +43,8 @@ class Holding {
     required this.avgPrice,
     this.assetClass = AssetClass.stock,
     this.sector,
+    this.ter = 0,
+    this.distribution = DistributionPolicy.none,
   });
 
   final String id;
@@ -36,6 +55,12 @@ class Holding {
   final AssetClass assetClass;
   final String? sector;
 
+  /// Total Expense Ratio annuo del fondo/ETF, in percentuale (es. 0.20 = 0,20%).
+  final double ter;
+
+  /// Politica dei dividendi (ACC/DIST), rilevante per fondi ed ETF.
+  final DistributionPolicy distribution;
+
   double get costBasis => quantity * avgPrice;
 
   Holding copyWith({
@@ -45,6 +70,8 @@ class Holding {
     double? avgPrice,
     AssetClass? assetClass,
     String? sector,
+    double? ter,
+    DistributionPolicy? distribution,
   }) {
     return Holding(
       id: id,
@@ -54,6 +81,8 @@ class Holding {
       avgPrice: avgPrice ?? this.avgPrice,
       assetClass: assetClass ?? this.assetClass,
       sector: sector ?? this.sector,
+      ter: ter ?? this.ter,
+      distribution: distribution ?? this.distribution,
     );
   }
 
@@ -66,6 +95,8 @@ class Holding {
       avgPrice: (map['avg_price'] as num).toDouble(),
       assetClass: AssetClass.fromName(map['asset_class'] as String?),
       sector: map['sector'] as String?,
+      ter: (map['ter'] as num?)?.toDouble() ?? 0,
+      distribution: DistributionPolicy.fromName(map['distribution'] as String?),
     );
   }
 
@@ -79,6 +110,8 @@ class Holding {
       'avg_price': avgPrice,
       'asset_class': assetClass.name,
       'sector': sector,
+      'ter': ter,
+      'distribution': distribution.name,
     };
   }
 }

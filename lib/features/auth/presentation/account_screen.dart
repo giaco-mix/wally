@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_config.dart';
 import '../providers/auth_providers.dart';
@@ -27,6 +28,27 @@ class AccountScreen extends ConsumerWidget {
               subtitle: Text(
                 AppConfig.isConfigured ? 'Connesso' : 'Modalità demo',
               ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.account_balance_outlined),
+                  title: const Text('Piattaforme e commissioni'),
+                  subtitle: const Text('Gestisci broker e costi'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/brokers'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.flag_outlined),
+                  title: const Text('Il tuo piano'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/plan'),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),

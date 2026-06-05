@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../../market/domain/quote.dart';
+import '../domain/broker.dart';
 import '../domain/holding.dart';
+import '../domain/portfolio_costs.dart';
 import '../domain/portfolio_snapshot.dart';
 import '../domain/position.dart';
 
@@ -49,6 +51,43 @@ final positionsProvider = Provider<AsyncValue<List<Position>>>((ref) {
     return list
         .map((h) => Position(holding: h, quote: q[h.symbol.toUpperCase()]))
         .toList();
+  });
+});
+
+/// Broker/piattaforme dell'utente (CRUD).
+final brokersControllerProvider =
+    AsyncNotifierProvider<BrokersController, List<Broker>>(
+        BrokersController.new);
+
+class BrokersController extends AsyncNotifier<List<Broker>> {
+  @override
+  Future<List<Broker>> build() async {
+    return ref.watch(portfolioRepositoryProvider).fetchBrokers();
+  }
+
+  Future<void> save(Broker broker) async {
+    await ref.read(portfolioRepositoryProvider).upsertBroker(broker);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  Future<void> delete(String id) async {
+    await ref.read(portfolioRepositoryProvider).deleteBroker(id);
+    ref.invalidateSelf();
+    await future;
+  }
+}
+
+/// Stima dei costi annui del portafoglio (TER + canoni broker) e netto.
+final portfolioCostsProvider = Provider<AsyncValue<PortfolioCosts>>((ref) {
+  final positions = ref.watch(positionsProvider);
+  final brokers = ref.watch(brokersControllerProvider);
+  if (brokers.isLoading) return const AsyncValue.loading();
+  return positions.whenData((list) {
+    return PortfolioCosts.compute(
+      positions: list,
+      brokers: brokers.asData?.value ?? const [],
+    );
   });
 });
 

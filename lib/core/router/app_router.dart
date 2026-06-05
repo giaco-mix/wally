@@ -11,6 +11,7 @@ import '../../features/auth/providers/auth_providers.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/plan/presentation/onboarding_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
+import '../../features/portfolio/presentation/brokers_screen.dart';
 import '../../features/portfolio/presentation/portfolio_screen.dart';
 import '../../features/rebalance/presentation/rebalance_screen.dart';
 import '../../shared/widgets/app_shell.dart';
@@ -72,6 +73,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/plan',
             pageBuilder: (_, _) => const NoTransitionPage(child: PlanScreen()),
+          ),
+          GoRoute(
+            path: '/brokers',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: BrokersScreen()),
           ),
           GoRoute(
             path: '/account',

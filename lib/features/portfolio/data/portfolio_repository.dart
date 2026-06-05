@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../domain/broker.dart';
 import '../domain/holding.dart';
 import '../domain/portfolio_snapshot.dart';
 
@@ -17,6 +18,11 @@ abstract class PortfolioRepository {
 
   /// Registra (o aggiorna) lo snapshot del giorno indicato.
   Future<void> recordSnapshot(DateTime date, double totalValue);
+
+  /// Broker/piattaforme dell'utente.
+  Future<List<Broker>> fetchBrokers();
+  Future<void> upsertBroker(Broker broker);
+  Future<void> deleteBroker(String id);
 }
 
 String _dateKey(DateTime d) =>
@@ -113,6 +119,32 @@ class SupabasePortfolioRepository implements PortfolioRepository {
       onConflict: 'user_id,snapshot_date',
     );
   }
+
+  @override
+  Future<List<Broker>> fetchBrokers() async {
+    final rows =
+        await _client.from('brokers').select().order('name', ascending: true);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(Broker.fromMap)
+        .toList();
+  }
+
+  @override
+  Future<void> upsertBroker(Broker broker) async {
+    final payload = broker.toInsert(_uid);
+    final existingId = int.tryParse(broker.id);
+    if (existingId != null) {
+      await _client.from('brokers').update(payload).eq('id', existingId);
+    } else {
+      await _client.from('brokers').insert(payload);
+    }
+  }
+
+  @override
+  Future<void> deleteBroker(String id) async {
+    await _client.from('brokers').delete().eq('id', int.parse(id));
+  }
 }
 
 /// Repository in memoria per la modalità demo (nessun backend).
@@ -163,15 +195,16 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
       _holdings[idx] = holding;
       return holding;
     }
-    final created = holding.copyWith();
     final withId = Holding(
       id: (_seq++).toString(),
-      symbol: created.symbol,
-      name: created.name,
-      quantity: created.quantity,
-      avgPrice: created.avgPrice,
-      assetClass: created.assetClass,
-      sector: created.sector,
+      symbol: holding.symbol,
+      name: holding.name,
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      assetClass: holding.assetClass,
+      sector: holding.sector,
+      ter: holding.ter,
+      distribution: holding.distribution,
     );
     _holdings.add(withId);
     return withId;
@@ -220,5 +253,40 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
     final day = DateTime(date.year, date.month, date.day);
     _snapshots[_dateKey(day)] =
         PortfolioSnapshot(date: day, totalValue: totalValue);
+  }
+
+  final List<Broker> _brokers = [
+    const Broker(
+      id: 'b1',
+      name: 'Directa',
+      accountFeeAnnual: 0,
+      orderFeeFixed: 5,
+      orderFeePercent: 0,
+    ),
+  ];
+  int _brokerSeq = 2;
+
+  @override
+  Future<List<Broker>> fetchBrokers() async => List.unmodifiable(_brokers);
+
+  @override
+  Future<void> upsertBroker(Broker broker) async {
+    final idx = _brokers.indexWhere((b) => b.id == broker.id);
+    if (idx >= 0) {
+      _brokers[idx] = broker;
+    } else {
+      _brokers.add(Broker(
+        id: 'b${_brokerSeq++}',
+        name: broker.name,
+        accountFeeAnnual: broker.accountFeeAnnual,
+        orderFeeFixed: broker.orderFeeFixed,
+        orderFeePercent: broker.orderFeePercent,
+      ));
+    }
+  }
+
+  @override
+  Future<void> deleteBroker(String id) async {
+    _brokers.removeWhere((b) => b.id == id);
   }
 }
