@@ -74,12 +74,15 @@ La **memoria automatica** di Claude Code è **locale** alla macchina (vive in
   digli *"leggi `docs/dev-setup.md` e i documenti in `docs/pitch-and-society-docs/`"*.
   Questo file + i doc di business contengono già lo stato e le decisioni: la nuova
   sessione riparte con il contesto giusto, su qualsiasi device.
-- **Modo "memoria identica" (opzionale)**: il nome della cartella memory deriva
-  dal **path assoluto** del progetto. Se cloni nello **stesso path** della macchina
-  originale, la memoria combacia; altrimenti copia il contenuto di
-  `~/.claude/projects/-Users-silentjack-Documents-Progetti-Finance-Companion/memory/`
-  nella cartella corrispondente del nuovo device (path-hash diverso ⇒ nome cartella diverso).
-  In pratica raramente necessario: il punto sopra è più affidabile.
+- **Modo "memoria identica" (versionata nel repo)**: la memoria è copiata in
+  [`docs/claude-memory/`](claude-memory/) e c'è uno script che la reinstalla nella
+  cartella Claude di questo device (calcola da solo il path-hash, quindi funziona
+  con qualsiasi percorso di clone):
+  ```bash
+  bash scripts/sync-claude-memory.sh
+  ```
+  Poi apri il progetto con Claude Code dalla radice del repo. Per ri-sincronizzare
+  dopo aggiornamenti, aggiorna i file in `docs/claude-memory/` e rilancia lo script.
 
 ---
 
