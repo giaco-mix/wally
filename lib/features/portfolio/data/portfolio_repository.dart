@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../coach/domain/mood.dart';
+import '../../coach/domain/mood_checkin.dart';
 import '../../rebalance/domain/rebalance_settings.dart';
 import '../domain/broker.dart';
 import '../domain/holding.dart';
@@ -28,6 +30,10 @@ abstract class PortfolioRepository {
   /// Impostazioni di ribilanciamento schedulato.
   Future<RebalanceSettings> fetchRebalanceSettings();
   Future<void> saveRebalanceSettings(RebalanceSettings settings);
+
+  /// Check-in dello stato d'animo (più recenti prima).
+  Future<List<MoodCheckin>> fetchMoodCheckins();
+  Future<void> recordMood(Mood mood);
 }
 
 String _dateKey(DateTime d) =>
@@ -175,6 +181,27 @@ class SupabasePortfolioRepository implements PortfolioRepository {
       },
       onConflict: 'user_id',
     );
+  }
+
+  @override
+  Future<List<MoodCheckin>> fetchMoodCheckins() async {
+    final rows = await _client
+        .from('mood_checkins')
+        .select()
+        .order('created_at', ascending: false)
+        .limit(60);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(MoodCheckin.fromMap)
+        .toList();
+  }
+
+  @override
+  Future<void> recordMood(Mood mood) async {
+    await _client.from('mood_checkins').insert({
+      'user_id': _uid,
+      'mood': mood.name,
+    });
   }
 }
 
@@ -330,5 +357,16 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   @override
   Future<void> saveRebalanceSettings(RebalanceSettings settings) async {
     _rebalanceSettings = settings;
+  }
+
+  final List<MoodCheckin> _moods = [];
+
+  @override
+  Future<List<MoodCheckin>> fetchMoodCheckins() async =>
+      List.unmodifiable(_moods);
+
+  @override
+  Future<void> recordMood(Mood mood) async {
+    _moods.insert(0, MoodCheckin(mood: mood, createdAt: DateTime.now()));
   }
 }

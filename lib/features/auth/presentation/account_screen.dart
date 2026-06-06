@@ -35,6 +35,14 @@ class AccountScreen extends ConsumerWidget {
             child: Column(
               children: [
                 ListTile(
+                  leading: const Icon(Icons.self_improvement),
+                  title: const Text('Wally Coach'),
+                  subtitle: const Text('Check-in e supporto comportamentale'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/coach'),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.account_balance_outlined),
                   title: const Text('Piattaforme e commissioni'),
                   subtitle: const Text('Gestisci broker e costi'),

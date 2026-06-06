@@ -8,6 +8,7 @@ import '../../portfolio/domain/position.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import '../../rebalance/providers/rebalance_providers.dart';
 import 'widgets/allocation_pie.dart';
+import 'widgets/coach_card.dart';
 import 'widgets/costs_card.dart';
 import 'widgets/performance_chart.dart';
 import 'widgets/plan_card.dart';
@@ -102,6 +103,8 @@ class _DashboardBody extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         const PlanCard(),
+        const SizedBox(height: 8),
+        const CoachCard(),
         const SizedBox(height: 8),
         const RebalanceAlert(),
         Wrap(

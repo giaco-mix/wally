@@ -8,6 +8,7 @@ import '../../features/auth/presentation/account_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
+import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/plan/presentation/onboarding_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
@@ -84,6 +85,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/notifications',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: NotificationsScreen()),
+          ),
+          GoRoute(
+            path: '/coach',
+            pageBuilder: (_, _) => const NoTransitionPage(child: CoachScreen()),
           ),
           GoRoute(
             path: '/account',
