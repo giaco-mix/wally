@@ -296,6 +296,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const SizedBox(height: 24),
         Text('Orizzonte: $_horizon anni',
             style: Theme.of(context).textTheme.titleMedium),
+        const _Hint(
+          'L\'orizzonte è per quanti anni lasci lavorare i tuoi soldi. '
+          'Più tempo dai all\'investimento, più le oscillazioni hanno modo '
+          'di compensarsi.',
+        ),
         Slider(
           value: _horizon.toDouble(),
           min: 1,
@@ -323,6 +328,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
             ),
           ),
+        const _Hint(
+          'Versare un po\' ogni mese si chiama PAC (Piano di Accumulo): '
+          'compri un po\' alla volta e non devi indovinare il momento giusto '
+          'per entrare. È la difesa numero uno contro le mosse di pancia.',
+        ),
       ],
     );
   }
@@ -334,6 +344,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       children: [
         _title('Il tuo portafoglio di partenza',
             'Una ricetta semplice e diversificata, adatta al tuo profilo.'),
+        const _Hint(
+          'In breve: le azioni sono il motore di crescita (rendono di più ma '
+          'oscillano), obbligazioni e liquidità danno stabilità (più calme, '
+          'rendono meno). Mescolarle riduce gli sbalzi.',
+        ),
+        const SizedBox(height: 12),
         ...LazyPortfolio.catalog.map((p) {
           final selected = _lazyId == p.id;
           return Card(
@@ -421,4 +437,35 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
         ),
       );
+}
+
+/// Nota esplicativa "amichevole" per spiegare un termine senza gergo.
+/// Sempre visibile (non nascosta in un expander): per chi parte da zero è più
+/// utile leggere subito cosa significa.
+class _Hint extends StatelessWidget {
+  const _Hint(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lightbulb_outline, size: 18, color: scheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
