@@ -194,3 +194,32 @@ drop policy if exists "mood: delete propri" on public.mood_checkins;
 create policy "mood: select propri" on public.mood_checkins for select using (auth.uid() = user_id);
 create policy "mood: insert propri" on public.mood_checkins for insert with check (auth.uid() = user_id);
 create policy "mood: delete propri" on public.mood_checkins for delete using (auth.uid() = user_id);
+
+-- === web push (sottoscrizioni + log invii) ==================================
+create table if not exists public.push_subscriptions (
+  endpoint   text primary key,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  p256dh     text not null,
+  auth       text not null,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+create index if not exists push_subs_user_idx on public.push_subscriptions (user_id);
+alter table public.push_subscriptions enable row level security;
+
+drop policy if exists "push_subs: select propri" on public.push_subscriptions;
+drop policy if exists "push_subs: insert propri" on public.push_subscriptions;
+drop policy if exists "push_subs: delete propri" on public.push_subscriptions;
+create policy "push_subs: select propri" on public.push_subscriptions for select using (auth.uid() = user_id);
+create policy "push_subs: insert propri" on public.push_subscriptions for insert with check (auth.uid() = user_id);
+create policy "push_subs: delete propri" on public.push_subscriptions for delete using (auth.uid() = user_id);
+
+create table if not exists public.push_notification_log (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  kind    text not null,
+  sent_on date not null default current_date,
+  primary key (user_id, kind, sent_on)
+);
+alter table public.push_notification_log enable row level security;
+drop policy if exists "push_log: select propri" on public.push_notification_log;
+create policy "push_log: select propri" on public.push_notification_log for select using (auth.uid() = user_id);

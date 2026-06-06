@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../notifications/data/push_client.dart';
+import '../../notifications/providers/push_providers.dart';
 import '../domain/wally_notification.dart';
 import '../providers/rebalance_providers.dart';
 
@@ -12,10 +14,11 @@ class NotificationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = ref.watch(notificationsProvider);
     final scheme = Theme.of(context).colorScheme;
+    final pushAvailable = ref.watch(pushAvailableProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Avvisi')),
-      body: notifications.isEmpty
+      body: notifications.isEmpty && !pushAvailable
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -40,10 +43,69 @@ class NotificationsScreen extends ConsumerWidget {
           : ListView(
               padding: const EdgeInsets.all(12),
               children: [
+                if (pushAvailable) const _PushToggleCard(),
+                if (notifications.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Nessun avviso al momento 👌 Continua così.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
                 for (final n in notifications) _NotificationCard(notification: n),
               ],
             ),
     );
+  }
+}
+
+/// Card per attivare/disattivare le notifiche push del browser.
+class _PushToggleCard extends ConsumerWidget {
+  const _PushToggleCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(pushEnabledProvider);
+
+    Future<void> toggle(bool value) async {
+      // Catturiamo il messenger prima degli await: niente BuildContext oltre
+      // i confini async.
+      final messenger = ScaffoldMessenger.of(context);
+      final controller = ref.read(pushEnabledProvider.notifier);
+      try {
+        if (value) {
+          await controller.enable();
+          _snack(messenger, 'Notifiche push attivate 🔔');
+        } else {
+          await controller.disable();
+          _snack(messenger, 'Notifiche push disattivate.');
+        }
+      } on PushException catch (e) {
+        _snack(messenger, e.message);
+      } catch (_) {
+        _snack(messenger, 'Qualcosa è andato storto. Riprova.');
+      }
+    }
+
+    return Card(
+      child: SwitchListTile(
+        secondary: const Icon(Icons.notifications_active_outlined),
+        title: const Text('Notifiche push'),
+        subtitle: const Text(
+          'Ricevi un promemoria anche quando Wally è chiuso: ribilanciamento '
+          'in scadenza e check-in periodici.',
+        ),
+        value: enabled.asData?.value ?? false,
+        onChanged: enabled.isLoading ? null : toggle,
+      ),
+    );
+  }
+
+  static void _snack(ScaffoldMessengerState messenger, String msg) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
   }
 }
 
