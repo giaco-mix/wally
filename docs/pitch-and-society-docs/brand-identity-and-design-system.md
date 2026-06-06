@@ -99,11 +99,13 @@ Material 3 con `useMaterial3: true`, supporto **light e dark** (`ThemeMode.syste
 
 | Ruolo | Font consigliato | In uso ora |
 |---|---|---|
-| Display / Headings | **Sora** o **Plus Jakarta Sans** (geometrico, fintech) | Roboto (default Flutter) |
-| Body / UI | **Inter** | Roboto (default Flutter) |
-| Numeri / cifre | Inter con **tabular figures** (`fontFeatures: tabularFigures`) | — da introdurre |
+| Display / Headings | **Sora** (geometrico, fintech) | ✅ **Sora** (via `google_fonts`) |
+| Body / UI | **Inter** | ✅ **Inter** (via `google_fonts`) |
+| Numeri / cifre | Inter con **tabular figures** (`fontFeatures: tabularFigures`) | ✅ **attive su tutta la scala** |
 
-**Raccomandazione**: per le tabelle (portafoglio, piano di ribilanciamento) attivare le **tabular figures** così le cifre restano incolonnate. È il prossimo upgrade tipografico suggerito.
+I font sono applicati in `lib/core/theme/app_theme.dart` (`_brandTextTheme`): **Sora** su display/headline/title, **Inter** su body/label. Le **tabular figures** sono attivate sull'intera type scale via `AppTheme.withTabularFigures`, così le cifre restano incolonnate nelle tabelle (portafoglio, piano di ribilanciamento) e nei numeri chiave del piano.
+
+> Nota tecnica: `google_fonts` scarica i font a runtime al primo avvio (fallback al font di sistema senza rete). Per l'offline puro nella PWA, bundlare i `.ttf` come asset — vedi roadmap del brand §10.
 
 Scala (Material 3 type scale): `headlineMedium` per il wordmark, `headlineSmall`/`titleLarge` per titoli schermata, `titleMedium` per titoli card, `bodyMedium`/`bodySmall` per contenuti e didascalie.
 
@@ -146,6 +148,7 @@ Valori **già implementati** in `app_theme.dart`:
 ## 9. Accessibilità
 - Contrasto minimo **AA** (4.5:1) per testo; lo schema Material 3 lo garantisce sui colori `on*`.
 - Non affidare informazione **solo** al colore: affianca segno (`+`/`-`) e label ("Compra"/"Vendi"). ✅ già fatto.
+- **Semantics per screen reader**: summary card come nodo unico ("Etichetta: valore"); grafici (allocazione, performance) marcati decorativi con riepilogo testuale equivalente; slider target associati all'asset class. ✅
 - Target touch ≥ 48px. ✅
 - Supporto dark mode. ✅
 
@@ -153,7 +156,8 @@ Valori **già implementati** in `app_theme.dart`:
 
 ## 10. Roadmap del brand
 1. Mark/logo definitivo + favicon e icone PWA brandizzate (ora placeholder Flutter).
-2. Introduzione font Inter + tabular figures.
-3. Token accent **Balance Teal** nei CTA secondari.
-4. Illustrazioni custom per empty state.
-5. Brand guidelines complete (PDF) + asset kit.
+2. ✅ ~~Introduzione font Inter + tabular figures~~ — fatto (Sora + Inter via `google_fonts`, tabular figures su tutta la scala).
+3. Bundlare i `.ttf` di Sora/Inter come asset per l'**offline puro** della PWA (oggi fetch a runtime via google_fonts).
+4. Token accent **Balance Teal** nei CTA secondari.
+5. Illustrazioni custom per empty state.
+6. Brand guidelines complete (PDF) + asset kit.
