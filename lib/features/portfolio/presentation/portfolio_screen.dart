@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../domain/position.dart';
 import '../providers/portfolio_providers.dart';
 import 'holding_form.dart';
+import 'import_csv_screen.dart';
 
 class PortfolioScreen extends ConsumerWidget {
   const PortfolioScreen({super.key});
@@ -19,6 +20,15 @@ class PortfolioScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Portafoglio'),
         actions: [
+          IconButton(
+            tooltip: 'Importa da CSV',
+            icon: const Icon(Icons.upload_file),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ImportCsvScreen(),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: 'Aggiorna quotazioni',
             icon: const Icon(Icons.refresh),

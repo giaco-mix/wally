@@ -32,6 +32,14 @@ class HoldingsController extends AsyncNotifier<List<Holding>> {
     ref.invalidateSelf();
     await future;
   }
+
+  /// Import in blocco (CSV broker).
+  Future<void> importHoldings(List<Holding> holdings) async {
+    final repo = ref.read(portfolioRepositoryProvider);
+    await repo.importHoldings(holdings);
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 /// Quotazioni correnti per i simboli presenti in portafoglio.

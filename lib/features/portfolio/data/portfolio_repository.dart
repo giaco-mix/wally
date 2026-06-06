@@ -12,6 +12,9 @@ abstract class PortfolioRepository {
   Future<Holding> upsertHolding(Holding holding);
   Future<void> deleteHolding(String id);
 
+  /// Inserisce più posizioni in blocco (import CSV). Gli `id` sono ignorati.
+  Future<void> importHoldings(List<Holding> holdings);
+
   /// Allocazioni target: mappa assetClass.name -> percentuale (0..100).
   Future<Map<String, double>> fetchTargets();
   Future<void> saveTargets(Map<String, double> targets);
@@ -86,6 +89,13 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   @override
   Future<void> deleteHolding(String id) async {
     await _client.from('holdings').delete().eq('id', int.parse(id));
+  }
+
+  @override
+  Future<void> importHoldings(List<Holding> holdings) async {
+    if (holdings.isEmpty) return;
+    final payload = [for (final h in holdings) h.toInsert(_uid)];
+    await _client.from('holdings').insert(payload);
   }
 
   @override
@@ -271,6 +281,23 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   @override
   Future<void> deleteHolding(String id) async {
     _holdings.removeWhere((h) => h.id == id);
+  }
+
+  @override
+  Future<void> importHoldings(List<Holding> holdings) async {
+    for (final h in holdings) {
+      _holdings.add(Holding(
+        id: (_seq++).toString(),
+        symbol: h.symbol,
+        name: h.name,
+        quantity: h.quantity,
+        avgPrice: h.avgPrice,
+        assetClass: h.assetClass,
+        sector: h.sector,
+        ter: h.ter,
+        distribution: h.distribution,
+      ));
+    }
   }
 
   @override
