@@ -20,7 +20,12 @@ class SummaryCard extends StatelessWidget {
       child: Container(
         width: 240,
         padding: const EdgeInsets.all(16),
-        child: Row(
+        // Un solo nodo per gli screen reader ("Etichetta: valore"), così non
+        // legge icona/label/valore come frammenti separati.
+        child: Semantics(
+          label: '$label: $value',
+          excludeSemantics: true,
+          child: Row(
           children: [
             CircleAvatar(
               backgroundColor:
@@ -51,6 +56,7 @@ class SummaryCard extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );

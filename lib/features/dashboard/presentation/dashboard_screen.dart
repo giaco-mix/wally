@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/format.dart';
+import '../../../shared/widgets/disclaimer_banner.dart';
 import '../../portfolio/domain/position.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import '../../rebalance/providers/rebalance_providers.dart';
@@ -157,6 +158,7 @@ class _DashboardBody extends StatelessWidget {
         PerformanceChart(currentValue: totalValue),
         const SizedBox(height: 16),
         const CostsCard(),
+        const DisclaimerBanner(margin: EdgeInsets.only(top: 16)),
       ],
     );
   }

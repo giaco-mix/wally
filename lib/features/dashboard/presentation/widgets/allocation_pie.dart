@@ -39,7 +39,10 @@ class AllocationPie extends StatelessWidget {
           children: [
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
-            SizedBox(
+            // Il grafico è puramente visivo: la legenda sotto espone gli stessi
+            // dati in forma testuale e accessibile.
+            ExcludeSemantics(
+              child: SizedBox(
               height: 180,
               child: PieChart(
                 PieChartData(
@@ -64,34 +67,44 @@ class AllocationPie extends StatelessWidget {
                 ),
               ),
             ),
+            ),
             const SizedBox(height: 16),
             ...[
               for (var i = 0; i < entries.length; i++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: _palette[i % _palette.length],
-                          borderRadius: BorderRadius.circular(3),
-                        ),
+                Builder(builder: (context) {
+                  final pct = total == 0
+                      ? '0'
+                      : (entries[i].value / total * 100).toStringAsFixed(1);
+                  final valueLabel = '${Fmt.money(entries[i].value)}  ($pct%)';
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Semantics(
+                      label: '${entries[i].key}: $valueLabel',
+                      excludeSemantics: true,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: _palette[i % _palette.length],
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(entries[i].key,
+                                maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ),
+                          Text(
+                            valueLabel,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(entries[i].key,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ),
-                      Text(
-                        '${Fmt.money(entries[i].value)}  '
-                        '(${total == 0 ? '0' : (entries[i].value / total * 100).toStringAsFixed(1)}%)',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                }),
             ],
           ],
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/format.dart';
+import '../../../shared/widgets/disclaimer_banner.dart';
 import '../domain/investment_plan.dart';
 import '../providers/plan_providers.dart';
 import 'widgets/projection_chart.dart';
@@ -187,6 +188,7 @@ class _PlanView extends StatelessWidget {
           icon: const Icon(Icons.edit_outlined),
           label: const Text('Modifica il piano'),
         ),
+        const DisclaimerBanner(margin: EdgeInsets.only(top: 16)),
       ],
     );
   }

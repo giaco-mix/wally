@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/format.dart';
+import '../../../shared/widgets/disclaimer_banner.dart';
 import '../../market/domain/fundamentals.dart';
 import '../../market/providers/market_providers.dart';
 import 'widgets/health_score_card.dart';
@@ -89,18 +90,7 @@ class _Body extends StatelessWidget {
           const SizedBox(height: 8),
           Text(f.summary!, style: Theme.of(context).textTheme.bodyMedium),
         ],
-        const SizedBox(height: 24),
-        Card(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              'Le informazioni mostrate hanno scopo puramente informativo e '
-              'non costituiscono consulenza finanziaria.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ),
-        ),
+        const DisclaimerBanner(margin: EdgeInsets.only(top: 24)),
       ],
     );
   }

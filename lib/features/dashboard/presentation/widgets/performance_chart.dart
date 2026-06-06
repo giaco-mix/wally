@@ -107,7 +107,14 @@ class _Chart extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Expanded(
-          child: LineChart(
+          // Il canvas del grafico non è leggibile dagli screen reader: forniamo
+          // un riepilogo testuale equivalente.
+          child: Semantics(
+            label: 'Andamento del valore del portafoglio da '
+                '${Fmt.money(first)} a ${Fmt.money(last)}, '
+                '${Fmt.signedPct(changePct)} dall\'inizio del periodo.',
+            excludeSemantics: true,
+            child: LineChart(
             LineChartData(
               minY: minY - pad,
               maxY: maxY + pad,
@@ -140,6 +147,7 @@ class _Chart extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ],

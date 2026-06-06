@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/format.dart';
+import '../../../shared/widgets/disclaimer_banner.dart';
 import '../../plan/providers/plan_providers.dart';
 import '../domain/behavior_tips.dart';
 import '../domain/mood.dart';
@@ -26,6 +27,7 @@ class CoachScreen extends ConsumerWidget {
           const _NotQuitterCard(),
           const SizedBox(height: 16),
           const _TipCard(),
+          const DisclaimerBanner(margin: EdgeInsets.only(top: 16)),
         ],
       ),
     );

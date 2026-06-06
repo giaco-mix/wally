@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/format.dart';
+import '../../../shared/widgets/disclaimer_banner.dart';
 import '../../portfolio/domain/holding.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import '../domain/rebalance.dart';
@@ -29,6 +30,7 @@ class RebalanceScreen extends ConsumerWidget {
             const _TargetEditor(),
             const SizedBox(height: 16),
             _PlanCard(plan: p),
+            const DisclaimerBanner(margin: EdgeInsets.only(top: 16)),
           ],
         ),
       ),
@@ -234,12 +236,17 @@ class _TargetRow extends StatelessWidget {
       children: [
         SizedBox(width: 110, child: Text(label)),
         Expanded(
-          child: Slider(
-            value: value.clamp(0, 100),
-            max: 100,
-            divisions: 100,
-            label: '${value.round()}%',
-            onChanged: onChanged,
+          // Associa lo slider all'asset class: lo screen reader annuncia
+          // "<asset class>: N%" invece del solo valore.
+          child: Semantics(
+            label: 'Allocazione target $label',
+            child: Slider(
+              value: value.clamp(0, 100),
+              max: 100,
+              divisions: 100,
+              label: '${value.round()}%',
+              onChanged: onChanged,
+            ),
           ),
         ),
         SizedBox(
