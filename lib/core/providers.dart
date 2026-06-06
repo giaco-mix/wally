@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../features/market/data/licensed_market_repository.dart';
 import '../features/market/data/market_repository.dart';
 import '../features/market/data/mock_market_repository.dart';
 import '../features/plan/data/plan_repository.dart';
@@ -15,9 +16,10 @@ final supabaseClientProvider = Provider<SupabaseClient>((_) {
 });
 
 final marketRepositoryProvider = Provider<MarketRepository>((ref) {
-  return AppConfig.isConfigured
-      ? YahooMarketRepository()
-      : MockMarketRepository();
+  if (!AppConfig.isConfigured) return MockMarketRepository();
+  // Provider licenziato se selezionato e configurato; altrimenti Yahoo (default).
+  if (AppConfig.useLicensedMarket) return LicensedMarketRepository();
+  return YahooMarketRepository();
 });
 
 final portfolioRepositoryProvider = Provider<PortfolioRepository>((ref) {

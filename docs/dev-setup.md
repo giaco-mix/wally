@@ -104,7 +104,7 @@ business plan, presentazione, brand & design system.
 **Modalità demo**: senza env Supabase, repository in-memory con dati sintetici (utile per sviluppo UI e screenshot).
 
 ## 9. Limiti / scelte note
-- **Dati di mercato**: Yahoo non ufficiale via edge function (proxy CORS). Da valutare provider licenziato prima di scalare.
+- **Dati di mercato**: Yahoo non ufficiale via edge function (proxy CORS). Lo swap a un provider **licenziato** è già predisposto (`LicensedMarketRepository` + selezione via `MARKET_PROVIDER`); confronto e scelta in [`docs/market-data-providers.md`](market-data-providers.md).
 - **Notifiche**: in-app (calcolate all'apertura). **Web-push in background**: il codice è pronto nel repo (service worker, edge function `send-push`, cron template); manca solo l'**attivazione** lato Supabase (chiavi VAPID + deploy + cron) — vedi [`docs/web-push-setup.md`](web-push-setup.md).
 - **Regolamentazione**: restare **educational / portafogli-modello**, NON consulenza personalizzata (MiFID II / CONSOB). Parere legale prima di funzioni che sfiorano la consulenza.
 - Il **preview statico locale** non fa SPA fallback (404 sui deep-link): in produzione ci pensa `vercel.json`.
