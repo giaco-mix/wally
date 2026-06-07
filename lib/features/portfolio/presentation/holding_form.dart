@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,12 +12,7 @@ import '../providers/portfolio_providers.dart';
 Future<void> showHoldingForm(BuildContext context, {Holding? existing}) {
   return showDialog<void>(
     context: context,
-    builder: (_) => Dialog(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: _HoldingForm(existing: existing),
-      ),
-    ),
+    builder: (_) => _HoldingForm(existing: existing),
   );
 }
 
@@ -105,166 +102,138 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              _isEdit ? 'Modifica posizione' : 'Nuova posizione',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            // I campi scrollano: così la barra Annulla/Salva resta sempre
-            // visibile anche su finestre basse.
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _SymbolField(
-                      controller: _symbol,
-                      enabled: !_isEdit,
-                      onSelected: (res) {
-                        _symbol.text = res.symbol;
-                        if (_name.text.trim().isEmpty) _name.text = res.name;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _name,
-                      decoration: const InputDecoration(
-                        labelText: 'Nome (opzionale)',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _qty,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9.,]'),
-                              ),
-                            ],
-                            decoration: const InputDecoration(
-                              labelText: 'Quantità',
-                            ),
-                            validator: _numberValidator,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _price,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9.,]'),
-                              ),
-                            ],
-                            decoration: const InputDecoration(
-                              labelText: 'Prezzo medio',
-                            ),
-                            validator: _numberValidator,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<AssetClass>(
-                      initialValue: _assetClass,
-                      decoration: const InputDecoration(
-                        labelText: 'Asset class',
-                      ),
-                      items: [
-                        for (final ac in AssetClass.values)
-                          DropdownMenuItem(value: ac, child: Text(ac.label)),
-                      ],
-                      onChanged: (v) =>
-                          setState(() => _assetClass = v ?? _assetClass),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _ter,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9.,]'),
-                              ),
-                            ],
-                            decoration: const InputDecoration(
-                              labelText: 'TER % (opzionale)',
-                              hintText: 'es. 0.20',
-                              suffixText: '%',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<DistributionPolicy>(
-                            initialValue: _distribution,
-                            decoration: const InputDecoration(
-                              labelText: 'Dividendi',
-                            ),
-                            items: [
-                              for (final d in DistributionPolicy.values)
-                                DropdownMenuItem(
-                                  value: d,
-                                  child: Text(d.label),
-                                ),
-                            ],
-                            onChanged: (v) => setState(
-                              () => _distribution = v ?? _distribution,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+    // Larghezza contenuto: ~460 su desktop, ridotta su finestre strette.
+    final width = math.min(460.0, MediaQuery.sizeOf(context).width - 48);
+    return AlertDialog(
+      title: Text(_isEdit ? 'Modifica posizione' : 'Nuova posizione'),
+      // scrollable: il contenuto scorre se non ci sta; le actions (Annulla/
+      // Salva) restano SEMPRE fisse e visibili in fondo.
+      scrollable: true,
+      content: SizedBox(
+        width: width,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SymbolField(
+                controller: _symbol,
+                enabled: !_isEdit,
+                onSelected: (res) {
+                  _symbol.text = res.symbol;
+                  if (_name.text.trim().isEmpty) _name.text = res.name;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _name,
+                decoration: const InputDecoration(
+                  labelText: 'Nome (opzionale)',
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _saving ? null : () => Navigator.of(context).pop(),
-                  child: const Text('Annulla'),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Salva'),
-                ),
-              ],
-            ),
-          ],
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _qty,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      decoration: const InputDecoration(labelText: 'Quantità'),
+                      validator: _numberValidator,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _price,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Prezzo medio',
+                      ),
+                      validator: _numberValidator,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<AssetClass>(
+                initialValue: _assetClass,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Asset class'),
+                items: [
+                  for (final ac in AssetClass.values)
+                    DropdownMenuItem(value: ac, child: Text(ac.label)),
+                ],
+                onChanged: (v) =>
+                    setState(() => _assetClass = v ?? _assetClass),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _ter,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'TER % (opzionale)',
+                        hintText: 'es. 0.20',
+                        suffixText: '%',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<DistributionPolicy>(
+                      initialValue: _distribution,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Dividendi'),
+                      items: [
+                        for (final d in DistributionPolicy.values)
+                          DropdownMenuItem(value: d, child: Text(d.label)),
+                      ],
+                      onChanged: (v) =>
+                          setState(() => _distribution = v ?? _distribution),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
+          child: const Text('Annulla'),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : _save,
+          child: _saving
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Salva'),
+        ),
+      ],
     );
   }
 }
