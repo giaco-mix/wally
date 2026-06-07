@@ -49,7 +49,8 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
     _qty = TextEditingController(text: h?.quantity.toString() ?? '');
     _price = TextEditingController(text: h?.avgPrice.toString() ?? '');
     _ter = TextEditingController(
-        text: (h != null && h.ter > 0) ? h.ter.toString() : '');
+      text: (h != null && h.ter > 0) ? h.ter.toString() : '',
+    );
     _assetClass = h?.assetClass ?? AssetClass.stock;
     _distribution = h?.distribution ?? DistributionPolicy.none;
   }
@@ -86,8 +87,9 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Errore: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Errore: $e')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -116,101 +118,135 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            _SymbolField(
-              controller: _symbol,
-              enabled: !_isEdit,
-              onSelected: (res) {
-                _symbol.text = res.symbol;
-                if (_name.text.trim().isEmpty) _name.text = res.name;
-              },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _name,
-              decoration: const InputDecoration(labelText: 'Nome (opzionale)'),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _qty,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                    ],
-                    decoration: const InputDecoration(labelText: 'Quantità'),
-                    validator: _numberValidator,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _price,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                    ],
-                    decoration:
-                        const InputDecoration(labelText: 'Prezzo medio'),
-                    validator: _numberValidator,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<AssetClass>(
-              initialValue: _assetClass,
-              decoration: const InputDecoration(labelText: 'Asset class'),
-              items: [
-                for (final ac in AssetClass.values)
-                  DropdownMenuItem(value: ac, child: Text(ac.label)),
-              ],
-              onChanged: (v) => setState(() => _assetClass = v ?? _assetClass),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _ter,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'TER % (opzionale)',
-                      hintText: 'es. 0.20',
-                      suffixText: '%',
+            // I campi scrollano: così la barra Annulla/Salva resta sempre
+            // visibile anche su finestre basse.
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _SymbolField(
+                      controller: _symbol,
+                      enabled: !_isEdit,
+                      onSelected: (res) {
+                        _symbol.text = res.symbol;
+                        if (_name.text.trim().isEmpty) _name.text = res.name;
+                      },
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _name,
+                      decoration: const InputDecoration(
+                        labelText: 'Nome (opzionale)',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _qty,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.,]'),
+                              ),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Quantità',
+                            ),
+                            validator: _numberValidator,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _price,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.,]'),
+                              ),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Prezzo medio',
+                            ),
+                            validator: _numberValidator,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<AssetClass>(
+                      initialValue: _assetClass,
+                      decoration: const InputDecoration(
+                        labelText: 'Asset class',
+                      ),
+                      items: [
+                        for (final ac in AssetClass.values)
+                          DropdownMenuItem(value: ac, child: Text(ac.label)),
+                      ],
+                      onChanged: (v) =>
+                          setState(() => _assetClass = v ?? _assetClass),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _ter,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.,]'),
+                              ),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'TER % (opzionale)',
+                              hintText: 'es. 0.20',
+                              suffixText: '%',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<DistributionPolicy>(
+                            initialValue: _distribution,
+                            decoration: const InputDecoration(
+                              labelText: 'Dividendi',
+                            ),
+                            items: [
+                              for (final d in DistributionPolicy.values)
+                                DropdownMenuItem(
+                                  value: d,
+                                  child: Text(d.label),
+                                ),
+                            ],
+                            onChanged: (v) => setState(
+                              () => _distribution = v ?? _distribution,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<DistributionPolicy>(
-                    initialValue: _distribution,
-                    decoration: const InputDecoration(labelText: 'Dividendi'),
-                    items: [
-                      for (final d in DistributionPolicy.values)
-                        DropdownMenuItem(value: d, child: Text(d.label)),
-                    ],
-                    onChanged: (v) =>
-                        setState(() => _distribution = v ?? _distribution),
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed:
-                      _saving ? null : () => Navigator.of(context).pop(),
+                  onPressed: _saving ? null : () => Navigator.of(context).pop(),
                   child: const Text('Annulla'),
                 ),
                 const SizedBox(width: 8),
