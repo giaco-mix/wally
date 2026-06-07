@@ -83,8 +83,8 @@ class _PushToggleCard extends ConsumerWidget {
         }
       } on PushException catch (e) {
         _snack(messenger, e.message);
-      } catch (_) {
-        _snack(messenger, 'Qualcosa è andato storto. Riprova.');
+      } catch (e) {
+        _snack(messenger, 'Errore: $e');
       }
     }
 

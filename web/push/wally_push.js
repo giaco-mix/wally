@@ -66,12 +66,17 @@
       }
 
       const permission = await Notification.requestPermission();
+      console.log('[wally-push] permission:', permission);
       if (permission !== 'granted') {
         return JSON.stringify({ ok: false, error: 'permission-' + permission });
       }
 
       const reg = await navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE });
-      await navigator.serviceWorker.ready;
+      console.log('[wally-push] SW registrato, scope:', reg.scope);
+      // Attende che QUESTO service worker (scope /push/) diventi attivo: la
+      // subscribe() fallisce se non c'è un worker attivo per la registrazione.
+      await _waitActive(reg);
+      console.log('[wally-push] SW attivo:', !!reg.active);
 
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
@@ -80,12 +85,29 @@
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
         });
       }
+      console.log('[wally-push] subscription ok:', sub && sub.endpoint);
 
       return JSON.stringify(subscriptionToJson(sub));
     } catch (e) {
-      return JSON.stringify({ ok: false, error: String((e && e.message) || e) });
+      const detail = e && e.name ? e.name + ': ' + e.message : String(e);
+      console.error('[wally-push] enable error:', detail, e);
+      return JSON.stringify({ ok: false, error: detail });
     }
   };
+
+  // Risolve quando la registrazione ha un service worker attivo.
+  function _waitActive(reg) {
+    if (reg.active) return Promise.resolve();
+    return new Promise((resolve) => {
+      const sw = reg.installing || reg.waiting;
+      if (!sw) return resolve();
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'activated') resolve();
+      });
+      // Salvagente: non bloccare oltre 10s.
+      setTimeout(resolve, 10000);
+    });
+  }
 
   window.wallyDisablePush = async function () {
     try {

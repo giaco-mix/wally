@@ -39,7 +39,9 @@ class PushException implements Exception {
         'permission-denied' =>
           'Hai bloccato le notifiche. Riattivale dalle impostazioni del browser.',
         'permission-default' => 'Permesso non concesso. Riprova quando vuoi.',
-        _ => 'Non è stato possibile attivare le notifiche push.',
+        // Per gli errori non mappati mostriamo il dettaglio reale (utile a
+        // capire cosa è andato storto: DOMException da register/subscribe, ecc.).
+        _ => 'Notifiche non attivate: $code',
       };
 
   @override
