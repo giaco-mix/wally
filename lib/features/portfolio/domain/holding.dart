@@ -1,13 +1,23 @@
 enum AssetClass {
   stock('Azioni'),
   etf('ETF'),
-  bond('Obbligazioni'),
+  bondShort('Obblig. breve termine'),
+  bondMid('Obblig. medio termine'),
+  bondLong('Obblig. lungo termine'),
+  bond('Obbligazioni (generiche)'),
   crypto('Crypto'),
   cash('Liquidità'),
   other('Altro');
 
   const AssetClass(this.label);
   final String label;
+
+  /// Vero per qualunque tipologia obbligazionaria (generica o per durata).
+  bool get isBond =>
+      this == AssetClass.bond ||
+      this == AssetClass.bondShort ||
+      this == AssetClass.bondMid ||
+      this == AssetClass.bondLong;
 
   static AssetClass fromName(String? name) =>
       AssetClass.values.firstWhere(

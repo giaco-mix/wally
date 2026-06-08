@@ -28,10 +28,19 @@ const Map<ImportField, List<String>> _headerAliases = {
 };
 
 /// Parole-chiave per dedurre l'[AssetClass] dal valore di una cella.
+/// ORDINE IMPORTANTE:
+/// - le obbligazioni vanno PRIMA di `stock` perché "obbligazi**oni**" contiene
+///   la sottostringa "azion" (keyword di stock) → altrimenti finirebbe in stock;
+/// - le durate (breve/medio/lungo) vanno PRIMA della generica `bond`.
+/// I valori esatti tipo "Azioni"/"ETF" passano comunque dal match esatto in
+/// [CsvImporter._parseAssetClass], quindi non sono toccati da quest'ordine.
 const Map<AssetClass, List<String>> _assetClassKeywords = {
-  AssetClass.stock: ['azion', 'stock', 'equity', 'titolo'],
-  AssetClass.etf: ['etf', 'fondo', 'fund'],
+  AssetClass.bondShort: ['brev', 'short'],
+  AssetClass.bondMid: ['medi', 'mid', 'intermedi'],
+  AssetClass.bondLong: ['lung', 'long'],
   AssetClass.bond: ['obblig', 'bond'],
+  AssetClass.stock: ['azion', 'stock', 'equity'],
+  AssetClass.etf: ['etf', 'fondo', 'fund'],
   AssetClass.crypto: ['crypto', 'cripto', 'btc', 'eth'],
   AssetClass.cash: ['liquid', 'cash', 'contant', 'conto'],
 };

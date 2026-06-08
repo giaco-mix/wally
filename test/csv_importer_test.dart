@@ -75,5 +75,20 @@ void main() {
       final result = CsvImporter.parse(csv);
       expect(result.validRows.first.holding!.name, 'AAPL');
     });
+
+    test('classifica le obbligazioni per durata', () {
+      const csv = 'symbol,quantity,price,tipo\n'
+          'IB01,1,5,Obbligazione a breve termine\n'
+          'BND5,1,5,Bond medio termine\n'
+          'IBGL,1,5,Obbligazionario lungo termine\n'
+          'GEN,1,5,Obbligazioni\n'
+          'AAA,1,5,Azioni globali\n';
+      final rows = CsvImporter.parse(csv).validRows;
+      expect(rows[0].holding!.assetClass, AssetClass.bondShort);
+      expect(rows[1].holding!.assetClass, AssetClass.bondMid);
+      expect(rows[2].holding!.assetClass, AssetClass.bondLong);
+      expect(rows[3].holding!.assetClass, AssetClass.bond);
+      expect(rows[4].holding!.assetClass, AssetClass.stock);
+    });
   });
 }
