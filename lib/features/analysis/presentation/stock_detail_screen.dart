@@ -37,21 +37,33 @@ class _Body extends StatelessWidget {
   const _Body({required this.f});
   final Fundamentals f;
 
+  List<_Metric> _equityMetrics() => [
+        _Metric('Capitalizzazione', Fmt.compactMoney(f.marketCap)),
+        _Metric('P/E (trailing)', Fmt.ratio(f.trailingPe)),
+        _Metric('P/E (forward)', Fmt.ratio(f.forwardPe)),
+        _Metric('Prezzo / Valore contabile', Fmt.ratio(f.priceToBook)),
+        _Metric('ROE', Fmt.pctFromFraction(f.returnOnEquity)),
+        _Metric('Margine netto', Fmt.pctFromFraction(f.profitMargins)),
+        _Metric('Debito / Equity', Fmt.ratio(f.debtToEquity)),
+        _Metric('Current ratio', Fmt.ratio(f.currentRatio)),
+        _Metric('Dividend yield', Fmt.pctFromFraction(f.dividendYield)),
+        _Metric('Beta', Fmt.ratio(f.beta)),
+        _Metric('Crescita ricavi', Fmt.pctFromFraction(f.revenueGrowth)),
+      ];
+
+  /// Metriche rilevanti per un ETF/fondo (no P/E da singola azienda).
+  List<_Metric> _fundMetrics() => [
+        _Metric('Costo annuo (TER)', Fmt.pctFromFraction(f.expenseRatio)),
+        _Metric('Rendimento distribuzione', Fmt.pctFromFraction(f.fundYield)),
+        _Metric('Rendimento YTD', Fmt.pctFromFraction(f.ytdReturn)),
+        _Metric('Beta', Fmt.ratio(f.beta)),
+        _Metric('Patrimonio', Fmt.compactMoney(f.marketCap)),
+      ];
+
   @override
   Widget build(BuildContext context) {
-    final metrics = <_Metric>[
-      _Metric('Capitalizzazione', Fmt.compactMoney(f.marketCap)),
-      _Metric('P/E (trailing)', Fmt.ratio(f.trailingPe)),
-      _Metric('P/E (forward)', Fmt.ratio(f.forwardPe)),
-      _Metric('Prezzo / Valore contabile', Fmt.ratio(f.priceToBook)),
-      _Metric('ROE', Fmt.pctFromFraction(f.returnOnEquity)),
-      _Metric('Margine netto', Fmt.pctFromFraction(f.profitMargins)),
-      _Metric('Debito / Equity', Fmt.ratio(f.debtToEquity)),
-      _Metric('Current ratio', Fmt.ratio(f.currentRatio)),
-      _Metric('Dividend yield', Fmt.pctFromFraction(f.dividendYield)),
-      _Metric('Beta', Fmt.ratio(f.beta)),
-      _Metric('Crescita ricavi', Fmt.pctFromFraction(f.revenueGrowth)),
-    ];
+    final isFund = f.isFund;
+    final metrics = isFund ? _fundMetrics() : _equityMetrics();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -62,13 +74,24 @@ class _Body extends StatelessWidget {
         Wrap(
           spacing: 8,
           children: [
-            if (f.sector != null) Chip(label: Text(f.sector!)),
-            if (f.industry != null)
+            if (isFund)
+              Chip(
+                label: Text(f.quoteType == 'MUTUALFUND' ? 'Fondo' : 'ETF'),
+                visualDensity: VisualDensity.compact,
+              ),
+            if (isFund && f.category != null)
+              Chip(label: Text(f.category!),
+                  visualDensity: VisualDensity.compact),
+            if (!isFund && f.sector != null) Chip(label: Text(f.sector!)),
+            if (!isFund && f.industry != null)
               Chip(label: Text(f.industry!), visualDensity: VisualDensity.compact),
           ],
         ),
         const SizedBox(height: 16),
-        HealthScoreCard(fundamentals: f),
+        if (isFund)
+          const _FundNote()
+        else
+          HealthScoreCard(fundamentals: f),
         const SizedBox(height: 16),
         PriceHistoryChart(symbol: f.symbol),
         const SizedBox(height: 16),
@@ -84,6 +107,10 @@ class _Body extends StatelessWidget {
             children: [for (final m in metrics) _MetricCard(metric: m)],
           );
         }),
+        if (isFund && f.topHoldings.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          _TopHoldings(holdings: f.topHoldings),
+        ],
         if (f.summary != null) ...[
           const SizedBox(height: 24),
           Text('Profilo', style: Theme.of(context).textTheme.titleMedium),
@@ -92,6 +119,76 @@ class _Body extends StatelessWidget {
         ],
         const DisclaimerBanner(margin: EdgeInsets.only(top: 24)),
       ],
+    );
+  }
+}
+
+/// Nota esplicativa per ETF/fondi: niente metriche da singola azienda.
+class _FundNote extends StatelessWidget {
+  const _FundNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.account_balance_outlined, color: scheme.onSecondaryContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'È un ETF/fondo: raccoglie tanti titoli, quindi non ha metriche '
+                'da singola azienda (P/E, ROE…). Quello che conta è il costo '
+                'annuo (TER), cosa contiene e quanto è diversificato.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Principali partecipazioni di un ETF/fondo.
+class _TopHoldings extends StatelessWidget {
+  const _TopHoldings({required this.holdings});
+  final List<FundHolding> holdings;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = holdings.take(10).toList();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Principali partecipazioni',
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            for (final h in shown)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(h.name,
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(Fmt.pctFromFraction(h.weight),
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

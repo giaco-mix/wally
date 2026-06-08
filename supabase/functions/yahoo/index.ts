@@ -29,6 +29,9 @@ const SUMMARY_MODULES = [
   "defaultKeyStatistics",
   "financialData",
   "price",
+  // Moduli specifici di fondi/ETF: categoria, spese (TER) e principali holdings.
+  "fundProfile",
+  "topHoldings",
 ].join(",");
 
 // Cache in-memory di cookie+crumb (riusati tra invocazioni a caldo).
