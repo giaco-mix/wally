@@ -43,6 +43,14 @@ class AccountScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.school_outlined),
+                  title: const Text('Strategie'),
+                  subtitle: const Text('Come strutturare un piano + modelli'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/strategie'),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.account_balance_outlined),
                   title: const Text('Piattaforme e commissioni'),
                   subtitle: const Text('Gestisci broker e costi'),

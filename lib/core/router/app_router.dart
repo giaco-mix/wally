@@ -16,6 +16,7 @@ import '../../features/portfolio/presentation/brokers_screen.dart';
 import '../../features/portfolio/presentation/portfolio_screen.dart';
 import '../../features/rebalance/presentation/notifications_screen.dart';
 import '../../features/rebalance/presentation/rebalance_screen.dart';
+import '../../features/strategies/presentation/strategies_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -89,6 +90,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/coach',
             pageBuilder: (_, _) => const NoTransitionPage(child: CoachScreen()),
+          ),
+          GoRoute(
+            path: '/strategie',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: StrategiesScreen()),
           ),
           GoRoute(
             path: '/account',

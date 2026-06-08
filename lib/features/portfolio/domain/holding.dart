@@ -4,7 +4,7 @@ enum AssetClass {
   bondShort('Obblig. breve termine'),
   bondMid('Obblig. medio termine'),
   bondLong('Obblig. lungo termine'),
-  bond('Obbligazioni (generiche)'),
+  bond('Obblig. generiche'),
   crypto('Crypto'),
   cash('Liquidità'),
   other('Altro');

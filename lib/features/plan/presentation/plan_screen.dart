@@ -188,6 +188,12 @@ class _PlanView extends StatelessWidget {
           icon: const Icon(Icons.edit_outlined),
           label: const Text('Modifica il piano'),
         ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () => context.go('/strategie'),
+          icon: const Icon(Icons.school_outlined),
+          label: const Text('Scopri le strategie'),
+        ),
         const DisclaimerBanner(margin: EdgeInsets.only(top: 16)),
       ],
     );
