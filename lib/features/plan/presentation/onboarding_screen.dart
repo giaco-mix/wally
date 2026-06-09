@@ -68,7 +68,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         _ => true,
       };
 
+  /// Cosa manca per proseguire dallo step corrente (per il messaggio guida).
+  String get _advanceHint => switch (_step) {
+        0 => 'Scegli un obiettivo per continuare.',
+        1 => 'Dimmi che tipo di investitore sei.',
+        2 => 'Inserisci un importo per continuare.',
+        3 => 'Scegli un portafoglio di partenza.',
+        _ => 'Completa lo step per continuare.',
+      };
+
   void _next() {
+    // Il pulsante resta sempre visibile: se manca qualcosa, lo spieghiamo
+    // invece di lasciarlo grigio/invisibile.
+    if (!_canAdvance) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(_advanceHint)));
+      return;
+    }
     if (_step < _steps - 1) {
       setState(() => _step++);
     } else {
@@ -141,7 +158,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                   const Spacer(),
                   FilledButton(
-                    onPressed: (!_canAdvance || _saving) ? null : _next,
+                    onPressed: _saving ? null : _next,
                     child: _saving
                         ? const SizedBox(
                             height: 20,
