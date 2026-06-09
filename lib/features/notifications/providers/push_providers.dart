@@ -5,7 +5,7 @@ import '../../../core/providers.dart';
 import '../data/push_client.dart';
 import '../data/push_repository.dart';
 
-final pushClientProvider = Provider<PushClient>((_) => const PushClient());
+final pushClientProvider = Provider<PushClient>((_) => PushClient());
 
 final pushRepositoryProvider = Provider<PushRepository>((ref) {
   return PushRepository(ref.watch(supabaseClientProvider));

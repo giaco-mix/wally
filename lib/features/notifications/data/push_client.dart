@@ -1,17 +1,8 @@
-import 'dart:convert';
-import 'dart:js_interop';
-
-import 'package:flutter/foundation.dart' show kIsWeb;
-
-// Binding alle funzioni esposte da web/push/wally_push.js.
-@JS('wallyPushSupported')
-external JSBoolean _wallyPushSupported();
-
-@JS('wallyEnablePush')
-external JSPromise<JSString> _wallyEnablePush(JSString vapidKey);
-
-@JS('wallyDisablePush')
-external JSPromise<JSString> _wallyDisablePush();
+// Interfaccia portabile del client Web Push. L'implementazione reale (js_interop)
+// è in push_client_web.dart e viene selezionata solo su web tramite import
+// condizionale; su VM/test si usa lo stub (no-op), così il codice compila ovunque.
+import 'push_client_stub.dart'
+    if (dart.library.js_interop) 'push_client_web.dart';
 
 /// Dati di una sottoscrizione push, pronti per essere salvati su Supabase.
 class PushSubscriptionData {
@@ -48,41 +39,17 @@ class PushException implements Exception {
   String toString() => 'PushException($code)';
 }
 
-/// Wrapper Dart sopra le API browser di Web Push (delegate a JS).
-class PushClient {
-  const PushClient();
+/// Client Web Push. Usa [PushClient.new] (delega all'implementazione di
+/// piattaforma): web reale via js_interop, stub no-op altrove.
+abstract class PushClient {
+  factory PushClient() => createPushClient();
 
   /// Vero se il browser corrente supporta service worker + Push API.
-  bool get isSupported {
-    if (!kIsWeb) return false;
-    try {
-      return _wallyPushSupported().toDart;
-    } catch (_) {
-      return false;
-    }
-  }
+  bool get isSupported;
 
   /// Chiede il permesso, registra il service worker e sottoscrive il push.
-  Future<PushSubscriptionData> enable(String vapidPublicKey) async {
-    final result = await _wallyEnablePush(vapidPublicKey.toJS).toDart;
-    final map = jsonDecode(result.toDart) as Map<String, dynamic>;
-    if (map['ok'] != true) {
-      throw PushException(map['error']?.toString() ?? 'unknown');
-    }
-    return PushSubscriptionData(
-      endpoint: map['endpoint'] as String,
-      p256dh: map['p256dh'] as String,
-      auth: map['auth'] as String,
-    );
-  }
+  Future<PushSubscriptionData> enable(String vapidPublicKey);
 
   /// Annulla la sottoscrizione locale. Ritorna l'endpoint rimosso (se c'era).
-  Future<String?> disable() async {
-    final result = await _wallyDisablePush().toDart;
-    final map = jsonDecode(result.toDart) as Map<String, dynamic>;
-    if (map['ok'] != true) {
-      throw PushException(map['error']?.toString() ?? 'unknown');
-    }
-    return map['endpoint'] as String?;
-  }
+  Future<String?> disable();
 }
