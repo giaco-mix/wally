@@ -9,11 +9,16 @@ class AllocationPie extends StatelessWidget {
     required this.title,
     required this.data,
     required this.total,
+    this.onTap,
   });
 
   final String title;
   final Map<String, double> data;
   final double total;
+
+  /// Se valorizzato, le voci della legenda diventano cliccabili (drill-down):
+  /// il callback riceve la chiave (es. label dell'asset class).
+  final void Function(String key)? onTap;
 
   static const _palette = [
     Color(0xFF1565C0),
@@ -76,33 +81,51 @@ class AllocationPie extends StatelessWidget {
                       ? '0'
                       : (entries[i].value / total * 100).toStringAsFixed(1);
                   final valueLabel = '${Fmt.money(entries[i].value)}  ($pct%)';
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Semantics(
-                      label: '${entries[i].key}: $valueLabel',
-                      excludeSemantics: true,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: _palette[i % _palette.length],
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(entries[i].key,
-                                maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ),
-                          Text(
-                            valueLabel,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
+                  final key = entries[i].key;
+                  final tappable = onTap != null;
+                  final row = Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: _palette[i % _palette.length],
+                          borderRadius: BorderRadius.circular(3),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(key,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
+                      Text(
+                        valueLabel,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      if (tappable)
+                        Icon(Icons.chevron_right,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.outline),
+                    ],
+                  );
+                  return Semantics(
+                    label: '$key: $valueLabel',
+                    button: tappable,
+                    excludeSemantics: true,
+                    child: tappable
+                        ? InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () => onTap!(key),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 3, horizontal: 4),
+                              child: row,
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 3),
+                            child: row,
+                          ),
                   );
                 }),
             ],

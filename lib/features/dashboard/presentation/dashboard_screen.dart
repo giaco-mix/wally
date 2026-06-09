@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/format.dart';
 import '../../../shared/widgets/disclaimer_banner.dart';
+import '../../portfolio/domain/holding.dart';
 import '../../portfolio/domain/position.dart';
+import '../../portfolio/presentation/holdings_by_class_screen.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import '../../rebalance/providers/rebalance_providers.dart';
 import 'widgets/allocation_pie.dart';
@@ -141,6 +143,17 @@ class _DashboardBody extends StatelessWidget {
                 title: 'Allocazione per asset class',
                 data: byClass,
                 total: totalValue,
+                onTap: (label) {
+                  final ac = AssetClass.values.firstWhere(
+                    (a) => a.label == label,
+                    orElse: () => AssetClass.other,
+                  );
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => HoldingsByClassScreen(assetClass: ac),
+                    ),
+                  );
+                },
               ),
             ),
             SizedBox(width: wide ? 16 : 0, height: wide ? 0 : 16),
