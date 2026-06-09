@@ -167,6 +167,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: Column(
         children: [
           LinearProgressIndicator(value: (_step + 1) / _steps),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            child: Row(
+              children: [
+                Text('Passo ${_step + 1} di $_steps',
+                    style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
           Expanded(
             child: Center(
               child: ConstrainedBox(
