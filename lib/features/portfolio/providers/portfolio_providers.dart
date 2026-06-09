@@ -42,6 +42,17 @@ class HoldingsController extends AsyncNotifier<List<Holding>> {
   }
 }
 
+/// Momento dell'ultimo aggiornamento riuscito delle quotazioni (per la UI).
+final lastQuotesRefreshProvider =
+    NotifierProvider<LastQuotesRefresh, DateTime?>(LastQuotesRefresh.new);
+
+class LastQuotesRefresh extends Notifier<DateTime?> {
+  @override
+  DateTime? build() => null;
+
+  void stampNow() => state = DateTime.now();
+}
+
 /// Quotazioni correnti per i simboli presenti in portafoglio.
 final quotesProvider = FutureProvider<Map<String, Quote>>((ref) async {
   final holdings = await ref.watch(holdingsControllerProvider.future);

@@ -20,5 +20,13 @@ class Position {
 
   double get gainPercent => costBasis == 0 ? 0 : (gain / costBasis) * 100;
 
+  /// Variazione di valore di **oggi** (quantità × variazione giornaliera del
+  /// prezzo). Null se manca la quotazione.
+  double? get dayChange =>
+      quote == null ? null : quote!.dayChange * holding.quantity;
+
+  /// Variazione percentuale di oggi del prezzo (null senza quotazione).
+  double? get dayChangePercent => quote?.dayChangePercent;
+
   bool get hasQuote => quote != null;
 }

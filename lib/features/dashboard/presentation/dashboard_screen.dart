@@ -25,6 +25,22 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final positions = ref.watch(positionsProvider);
 
+    // Registra il momento dell'ultimo aggiornamento riuscito delle quotazioni.
+    ref.listen(quotesProvider, (_, next) {
+      if (next.hasValue) {
+        ref.read(lastQuotesRefreshProvider.notifier).stampNow();
+      }
+    });
+
+    Future<void> refresh() async {
+      ref.invalidate(quotesProvider);
+      try {
+        await ref.read(quotesProvider.future);
+      } catch (_) {
+        // L'errore è già gestito dallo stato del provider.
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -33,7 +49,7 @@ class DashboardScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Aggiorna',
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(quotesProvider),
+            onPressed: refresh,
           ),
         ],
       ),
@@ -53,7 +69,10 @@ class DashboardScreen extends ConsumerWidget {
               ),
             );
           }
-          return _DashboardBody(positions: list);
+          return RefreshIndicator(
+            onRefresh: refresh,
+            child: _DashboardBody(positions: list),
+          );
         },
       ),
     );
@@ -76,16 +95,31 @@ class _NotificationBell extends StatelessWidget {
   }
 }
 
-class _DashboardBody extends StatelessWidget {
+class _DashboardBody extends ConsumerWidget {
   const _DashboardBody({required this.positions});
   final List<Position> positions;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final updatedAt = ref.watch(lastQuotesRefreshProvider);
     final totalValue = positions.fold<double>(0, (a, p) => a + p.marketValue);
     final totalCost = positions.fold<double>(0, (a, p) => a + p.costBasis);
     final gain = totalValue - totalCost;
     final gainPct = totalCost == 0 ? 0.0 : (gain / totalCost) * 100;
+
+    // Variazione di oggi (somma sulle posizioni quotate).
+    var dayChange = 0.0;
+    var prevValue = 0.0;
+    var anyQuote = false;
+    for (final p in positions) {
+      final dc = p.dayChange;
+      if (dc != null) {
+        dayChange += dc;
+        prevValue += p.marketValue - dc;
+        anyQuote = true;
+      }
+    }
+    final dayPct = prevValue == 0 ? 0.0 : (dayChange / prevValue) * 100;
 
     final byClass = <String, double>{};
     final bySector = <String, double>{};
@@ -105,6 +139,25 @@ class _DashboardBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (updatedAt != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Icon(Icons.schedule,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.outline),
+                const SizedBox(width: 4),
+                Text(
+                  'Aggiornato alle ${Fmt.time(updatedAt)}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                ),
+              ],
+            ),
+          ),
         const PlanCard(),
         const SizedBox(height: 8),
         const CoachCard(),
@@ -125,6 +178,13 @@ class _DashboardBody extends StatelessWidget {
               icon: gain >= 0 ? Icons.trending_up : Icons.trending_down,
               color: gain >= 0 ? AppTheme.positive : AppTheme.negative,
             ),
+            if (anyQuote)
+              SummaryCard(
+                label: 'Oggi',
+                value: '${Fmt.signed(dayChange)}  (${Fmt.signedPct(dayPct)})',
+                icon: dayChange >= 0 ? Icons.today : Icons.today_outlined,
+                color: dayChange >= 0 ? AppTheme.positive : AppTheme.negative,
+              ),
             SummaryCard(
               label: 'Posizioni',
               value: positions.length.toString(),
@@ -150,7 +210,10 @@ class _DashboardBody extends StatelessWidget {
                   );
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) => HoldingsByClassScreen(assetClass: ac),
+                      builder: (_) => HoldingsFilterScreen(
+                        title: ac.label,
+                        test: (p) => p.holding.assetClass == ac,
+                      ),
                     ),
                   );
                 },
@@ -163,6 +226,20 @@ class _DashboardBody extends StatelessWidget {
                 title: 'Allocazione per settore',
                 data: bySector,
                 total: totalValue,
+                onTap: (sector) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => HoldingsFilterScreen(
+                        title: sector,
+                        test: (p) {
+                          final s = p.holding.sector?.trim();
+                          final key = (s == null || s.isEmpty) ? 'N/D' : s;
+                          return key == sector;
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],

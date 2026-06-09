@@ -88,10 +88,26 @@ class _PositionTile extends ConsumerWidget {
             ),
           ],
         ),
-        subtitle: Text(
-          '${Fmt.ratio(h.quantity, decimals: h.quantity % 1 == 0 ? 0 : 2)} '
-          '× ${Fmt.money(h.avgPrice)}'
-          '${position.hasQuote ? '  →  ${Fmt.money(position.currentPrice)}' : ''}',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${Fmt.ratio(h.quantity, decimals: h.quantity % 1 == 0 ? 0 : 2)} '
+              '× ${Fmt.money(h.avgPrice)}'
+              '${position.hasQuote ? '  →  ${Fmt.money(position.currentPrice)}' : ''}',
+            ),
+            if (position.dayChangePercent != null)
+              Text(
+                'Oggi ${Fmt.signedPct(position.dayChangePercent!)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: position.dayChangePercent! >= 0
+                      ? AppTheme.positive
+                      : AppTheme.negative,
+                ),
+              ),
+          ],
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,

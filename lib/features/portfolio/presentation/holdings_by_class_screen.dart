@@ -4,37 +4,39 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/format.dart';
-import '../domain/holding.dart';
 import '../domain/position.dart';
 import '../providers/portfolio_providers.dart';
 
-/// Drill-down: le posizioni di una singola asset class (dal grafico in dashboard).
-class HoldingsByClassScreen extends ConsumerWidget {
-  const HoldingsByClassScreen({super.key, required this.assetClass});
-  final AssetClass assetClass;
+/// Drill-down generico: le posizioni che soddisfano un filtro (per asset class
+/// o per settore), aperte dai grafici in dashboard.
+class HoldingsFilterScreen extends ConsumerWidget {
+  const HoldingsFilterScreen({
+    super.key,
+    required this.title,
+    required this.test,
+  });
+
+  final String title;
+  final bool Function(Position) test;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final positions = ref.watch(positionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(assetClass.label)),
+      appBar: AppBar(title: Text(title)),
       body: positions.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Errore: $e')),
         data: (all) {
-          final list = all
-              .where((p) => p.holding.assetClass == assetClass)
-              .toList()
+          final list = all.where(test).toList()
             ..sort((a, b) => b.marketValue.compareTo(a.marketValue));
           if (list.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
-                child: Text(
-                  'Nessuna posizione in ${assetClass.label}.',
-                  textAlign: TextAlign.center,
-                ),
+                child: Text('Nessuna posizione in $title.',
+                    textAlign: TextAlign.center),
               ),
             );
           }
@@ -70,12 +72,28 @@ class _Tile extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: CircleAvatar(child: Text(h.symbol.characters.first)),
-        title: Text(h.symbol,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(
-          '${Fmt.ratio(h.quantity, decimals: h.quantity % 1 == 0 ? 0 : 2)} '
-          '× ${Fmt.money(h.avgPrice)}'
-          '${position.hasQuote ? '  →  ${Fmt.money(position.currentPrice)}' : ''}',
+        title:
+            Text(h.symbol, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${Fmt.ratio(h.quantity, decimals: h.quantity % 1 == 0 ? 0 : 2)} '
+              '× ${Fmt.money(h.avgPrice)}'
+              '${position.hasQuote ? '  →  ${Fmt.money(position.currentPrice)}' : ''}',
+            ),
+            if (position.dayChangePercent != null)
+              Text(
+                'Oggi ${Fmt.signedPct(position.dayChangePercent!)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: position.dayChangePercent! >= 0
+                      ? AppTheme.positive
+                      : AppTheme.negative,
+                ),
+              ),
+          ],
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
