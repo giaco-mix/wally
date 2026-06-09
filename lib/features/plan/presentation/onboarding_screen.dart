@@ -133,6 +133,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           onPressed: _back,
         ),
       ),
+      // La barra azioni è in bottomNavigationBar: così è SEMPRE fissa in fondo
+      // e visibile, indipendentemente dall'altezza del contenuto dello step.
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              TextButton(
+                onPressed: _saving ? null : _back,
+                child: Text(_step == 0 ? 'Annulla' : 'Indietro'),
+              ),
+              const Spacer(),
+              FilledButton(
+                onPressed: _saving ? null : _next,
+                child: _saving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(_step == _steps - 1 ? 'Crea il piano' : 'Avanti'),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: Column(
         children: [
           LinearProgressIndicator(value: (_step + 1) / _steps),
@@ -144,29 +175,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   padding: const EdgeInsets.all(20),
                   child: _buildStep(),
                 ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  TextButton(
-                    onPressed: _saving ? null : _back,
-                    child: Text(_step == 0 ? 'Annulla' : 'Indietro'),
-                  ),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: _saving ? null : _next,
-                    child: _saving
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text(_step == _steps - 1 ? 'Crea il piano' : 'Avanti'),
-                  ),
-                ],
               ),
             ),
           ),
