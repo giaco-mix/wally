@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/format.dart';
 import '../../../shared/widgets/disclaimer_banner.dart';
+import '../../plan/domain/risk_profile.dart';
 import '../../plan/providers/plan_providers.dart';
 import '../domain/behavior_tips.dart';
 import '../domain/mood.dart';
@@ -24,6 +25,7 @@ class CoachScreen extends ConsumerWidget {
           ],
           const _MoodCheckinCard(),
           const SizedBox(height: 16),
+          const _AdaptiveCard(),
           const _NotQuitterCard(),
           const SizedBox(height: 16),
           const _TipCard(),
@@ -224,6 +226,57 @@ class _TipCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Coaching adattivo: il messaggio si adatta al profilo di rischio del piano.
+class _AdaptiveCard extends ConsumerWidget {
+  const _AdaptiveCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final plan = ref.watch(planControllerProvider).asData?.value;
+    if (plan == null) return const SizedBox.shrink();
+    final msg = switch (plan.riskProfile) {
+      RiskProfile.prudent =>
+        'Hai scelto un profilo prudente: oscillazioni piccole, crescita più '
+            'lenta. Se vedi un calo, ricorda che è proprio ciò che hai accettato '
+            'di rischiare poco — niente panico.',
+      RiskProfile.balanced =>
+        'Profilo equilibrato: un buon compromesso. In un anno storto puoi vedere '
+            '-15/-20%: è normale, fa parte del patto. Resta sul piano.',
+      RiskProfile.aggressive =>
+        'Profilo aggressivo: punti in alto e accetti forti oscillazioni. Nei cali '
+            'profondi ti servirà sangue freddo — sono qui per ricordartelo: chi '
+            'resta investito, storicamente, viene premiato.',
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.tips_and_updates_outlined),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Su misura per te (${plan.riskProfile.label})',
+                        style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 4),
+                    Text(msg),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
