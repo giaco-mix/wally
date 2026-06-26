@@ -146,8 +146,11 @@ Far evolvere UI/contenuti in base alle risposte del quiz A1. Ampio, lungo termin
 - ✅ **E** — import posizioni da CSV
 - ✅ **F** — confronto fondi/ETF + dividendi & rendita
 - ✅ **G1** — news sul portafoglio
-- ⏳ **D** — multi-obiettivo / multi-portafoglio: **rinviato di proposito** (vedi piano sotto)
-- 💡 **B3** composizione PAC variabile (core/satellite) e **G2** app adattiva: idee, rinviate
+- ✅ **D** — multi-portafoglio (non-breaking): portfolios + selettore; holdings/transactions scoped. *v1: plans/targets/rebalance restano globali, snapshot per-utente.*
+- ✅ **B3** — comparto core/satellite sulle operazioni (campo `sleeve`)
+- ✅ **G2** — coaching adattivo per profilo di rischio nel Wally Coach
+
+**Backlog A→G completato.** Restano raffinamenti futuri: rendere plans/targets/rebalance per-portafoglio; snapshot per-portafoglio; G1 news con fonte più ricca.
 
 ### Piano per D (multi-portafoglio) — da fare in un passo dedicato
 È l'unico pezzo strutturale: oggi `holdings`, `plans`, `targets`, `rebalance_settings`,
