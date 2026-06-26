@@ -13,6 +13,7 @@ import '../../rebalance/providers/rebalance_providers.dart';
 import 'widgets/allocation_pie.dart';
 import 'widgets/coach_card.dart';
 import 'widgets/costs_card.dart';
+import 'widgets/news_card.dart';
 import 'widgets/performance_chart.dart';
 import 'widgets/plan_card.dart';
 import 'widgets/rebalance_alert.dart';
@@ -321,6 +322,8 @@ class _DashboardBody extends ConsumerWidget {
         PerformanceChart(currentValue: totalValue),
         const SizedBox(height: 16),
         const CostsCard(),
+        const SizedBox(height: 16),
+        const NewsCard(),
         const DisclaimerBanner(margin: EdgeInsets.only(top: 16)),
       ],
     );

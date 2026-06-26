@@ -150,7 +150,17 @@ Far evolvere UI/contenuti in base alle risposte del quiz A1. Ampio, lungo termin
 - ✅ **B3** — comparto core/satellite sulle operazioni (campo `sleeve`)
 - ✅ **G2** — coaching adattivo per profilo di rischio nel Wally Coach
 
-**Backlog A→G completato.** Restano raffinamenti futuri: rendere plans/targets/rebalance per-portafoglio; snapshot per-portafoglio; G1 news con fonte più ricca.
+**Backlog A→G completato.**
+
+### Completamento D + news (fatto)
+- ✅ **D completata**: piano, target, ribilanciamento e snapshot ora **per-portafoglio**
+  (portfolio_id + vincoli aggiornati; backfill in `ensureDefaultPortfolio`). Ogni
+  portafoglio ha la sua strategia.
+- ✅ **News arricchite**: thumbnail, tempo relativo, news di mercato generali, card
+  "Novità" in dashboard.
+
+Raffinamenti futuri possibili: snapshot/news per-portafoglio nello stato InMemory demo
+(ora condiviso); web-push delle news; fonte news alternativa/licenziata.
 
 ### Piano per D (multi-portafoglio) — da fare in un passo dedicato
 È l'unico pezzo strutturale: oggi `holdings`, `plans`, `targets`, `rebalance_settings`,

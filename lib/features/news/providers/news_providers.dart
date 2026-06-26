@@ -20,21 +20,28 @@ final portfolioNewsProvider = FutureProvider<List<NewsItem>>((ref) async {
 
   final client = http.Client();
   final out = <NewsItem>[];
+
+  Future<void> fetchFor(String term, {String? symbol}) async {
+    final uri = Uri.parse(AppConfig.yahooFunctionUrl)
+        .replace(queryParameters: {'action': 'news', 'symbol': term});
+    final res = await client.get(uri, headers: {
+      'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+      'apikey': AppConfig.supabaseAnonKey,
+    });
+    if (res.statusCode != 200) return;
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    final news = (json['news'] as List? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map((m) => NewsItem.fromYahoo(m, symbol: symbol));
+    out.addAll(news);
+  }
+
   try {
     for (final s in symbols) {
-      final uri = Uri.parse(AppConfig.yahooFunctionUrl)
-          .replace(queryParameters: {'action': 'news', 'symbol': s});
-      final res = await client.get(uri, headers: {
-        'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
-        'apikey': AppConfig.supabaseAnonKey,
-      });
-      if (res.statusCode != 200) continue;
-      final json = jsonDecode(res.body) as Map<String, dynamic>;
-      final news = (json['news'] as List? ?? const [])
-          .cast<Map<String, dynamic>>()
-          .map((m) => NewsItem.fromYahoo(m, symbol: s));
-      out.addAll(news);
+      await fetchFor(s, symbol: s);
     }
+    // Una manciata di notizie di mercato generali per contesto.
+    await fetchFor('mercati azionari');
   } finally {
     client.close();
   }

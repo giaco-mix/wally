@@ -46,15 +46,36 @@ class NewsScreen extends ConsumerWidget {
               final n = list[i];
               return Card(
                 child: ListTile(
-                  leading: const Icon(Icons.article_outlined),
+                  leading: SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: (n.thumbnail == null || n.thumbnail!.isEmpty)
+                          ? const ColoredBox(
+                              color: Color(0x11000000),
+                              child: Icon(Icons.article_outlined),
+                            )
+                          : Image.network(
+                              n.thumbnail!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => const ColoredBox(
+                                color: Color(0x11000000),
+                                child: Icon(Icons.article_outlined),
+                              ),
+                            ),
+                    ),
+                  ),
                   title: Text(n.title),
                   subtitle: Text([
                     if (n.relatedSymbol != null) n.relatedSymbol,
                     if (n.publisher.isNotEmpty) n.publisher,
+                    if (n.relativeTime != null) n.relativeTime,
                   ].whereType<String>().join(' · ')),
                   trailing: n.link.isEmpty
                       ? null
                       : const Icon(Icons.open_in_new, size: 18),
+                  isThreeLine: true,
                   onTap: n.link.isEmpty
                       ? null
                       : () => launchUrl(Uri.parse(n.link),
