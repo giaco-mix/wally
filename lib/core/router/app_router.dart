@@ -12,6 +12,7 @@ import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/news/presentation/news_screen.dart';
 import '../../features/plan/presentation/onboarding_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
 import '../../features/portfolio/presentation/brokers_screen.dart';
@@ -108,6 +109,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/income',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: IncomeScreen()),
+          ),
+          GoRoute(
+            path: '/news',
+            pageBuilder: (_, _) => const NoTransitionPage(child: NewsScreen()),
           ),
           GoRoute(
             path: '/strategie',

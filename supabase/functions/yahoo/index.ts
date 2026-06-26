@@ -122,6 +122,15 @@ Deno.serve(async (req: Request) => {
         );
         return json(data);
       }
+      case "news": {
+        // Notizie relative a un simbolo/tema (per la sezione "Novità").
+        const term = symbol || q;
+        if (!term) return json({ error: "symbol/q mancante" }, 400);
+        const data = await fetchJson(
+          `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(term)}&quotesCount=0&newsCount=8`,
+        );
+        return json(data);
+      }
       default:
         return json({ error: "action non valida (chart|summary|search)" }, 400);
     }
