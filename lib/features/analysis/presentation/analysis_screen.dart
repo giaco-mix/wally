@@ -19,7 +19,21 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
     final results = ref.watch(symbolSearchProvider(_query));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Analisi fondamentale')),
+      appBar: AppBar(
+        title: const Text('Analisi fondamentale'),
+        actions: [
+          IconButton(
+            tooltip: 'Confronta fondi/ETF',
+            icon: const Icon(Icons.compare_arrows),
+            onPressed: () => context.go('/compare'),
+          ),
+          IconButton(
+            tooltip: 'Dividendi & rendita',
+            icon: const Icon(Icons.payments_outlined),
+            onPressed: () => context.go('/income'),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(

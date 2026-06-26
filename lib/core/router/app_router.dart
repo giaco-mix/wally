@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/analysis/presentation/analysis_screen.dart';
+import '../../features/analysis/presentation/compare_screen.dart';
+import '../../features/analysis/presentation/income_screen.dart';
 import '../../features/analysis/presentation/stock_detail_screen.dart';
 import '../../features/auth/presentation/account_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
@@ -96,6 +98,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/transactions',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: TransactionsScreen()),
+          ),
+          GoRoute(
+            path: '/compare',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: CompareScreen()),
+          ),
+          GoRoute(
+            path: '/income',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: IncomeScreen()),
           ),
           GoRoute(
             path: '/strategie',
