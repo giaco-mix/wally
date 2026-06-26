@@ -45,6 +45,7 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+          const _PortfolioMenu(),
           _NotificationBell(count: ref.watch(notificationsProvider).length),
           IconButton(
             tooltip: 'Aggiorna',
@@ -76,6 +77,78 @@ class DashboardScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+}
+
+class _PortfolioMenu extends ConsumerWidget {
+  const _PortfolioMenu();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final portfolios =
+        ref.watch(portfoliosControllerProvider).asData?.value ?? const [];
+    if (portfolios.length < 2) {
+      // Un solo portafoglio: mostra solo l'azione "nuovo".
+      return IconButton(
+        tooltip: 'Nuovo portafoglio',
+        icon: const Icon(Icons.create_new_folder_outlined),
+        onPressed: () => _createDialog(context, ref),
+      );
+    }
+    final current = ref.watch(currentPortfolioIdProvider);
+    return PopupMenuButton<String>(
+      tooltip: 'Cambia portafoglio',
+      icon: const Icon(Icons.folder_outlined),
+      onSelected: (v) {
+        if (v == '__new__') {
+          _createDialog(context, ref);
+        } else {
+          ref.read(selectedPortfolioIdProvider.notifier).select(v);
+        }
+      },
+      itemBuilder: (_) => [
+        for (final p in portfolios)
+          CheckedPopupMenuItem(
+            value: p.id,
+            checked: p.id == current,
+            child: Text(p.name),
+          ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(value: '__new__', child: Text('Nuovo portafoglio…')),
+      ],
+    );
+  }
+
+  Future<void> _createDialog(BuildContext context, WidgetRef ref) async {
+    final ctrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Nuovo portafoglio'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Nome (es. Pensione)'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annulla'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+            child: const Text('Crea'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+    await ref.read(portfoliosControllerProvider.notifier).create(name);
+    final list = ref.read(portfoliosControllerProvider).asData?.value ?? const [];
+    final created = list.where((p) => p.name == name).toList();
+    if (created.isNotEmpty) {
+      ref.read(selectedPortfolioIdProvider.notifier).select(created.last.id);
+    }
   }
 }
 

@@ -44,6 +44,7 @@ class Transaction {
     this.ter = 0,
     this.distribution = DistributionPolicy.none,
     this.leverage = 1,
+    this.portfolioId,
   });
 
   final String? id;
@@ -59,9 +60,29 @@ class Transaction {
   final double ter;
   final DistributionPolicy distribution;
   final int leverage;
+  final String? portfolioId;
 
   /// Controvalore dell'operazione.
   double get amount => quantity * price;
+
+  Transaction copyWith({String? portfolioId}) {
+    return Transaction(
+      id: id,
+      symbol: symbol,
+      name: name,
+      side: side,
+      kind: kind,
+      date: date,
+      quantity: quantity,
+      price: price,
+      assetClass: assetClass,
+      currency: currency,
+      ter: ter,
+      distribution: distribution,
+      leverage: leverage,
+      portfolioId: portfolioId ?? this.portfolioId,
+    );
+  }
 
   factory Transaction.fromMap(Map<String, dynamic> m) {
     return Transaction(
@@ -78,6 +99,7 @@ class Transaction {
       ter: (m['ter'] as num?)?.toDouble() ?? 0,
       distribution: DistributionPolicy.fromName(m['distribution'] as String?),
       leverage: (m['leverage'] as num?)?.toInt() ?? 1,
+      portfolioId: m['portfolio_id']?.toString(),
     );
   }
 
@@ -97,6 +119,7 @@ class Transaction {
       'ter': ter,
       'distribution': distribution.name,
       'leverage': leverage,
+      if (portfolioId != null) 'portfolio_id': portfolioId,
     };
   }
 }

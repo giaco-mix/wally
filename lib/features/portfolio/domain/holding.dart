@@ -57,6 +57,7 @@ class Holding {
     this.distribution = DistributionPolicy.none,
     this.currency = 'EUR',
     this.leverage = 1,
+    this.portfolioId,
   });
 
   final String id;
@@ -79,6 +80,10 @@ class Holding {
   /// Fattore di leva (1 = nessuna leva; 2/3 = ETF a leva 2x/3x).
   final int leverage;
 
+  /// Portafoglio di appartenenza (multi-portafoglio). Null = portafoglio
+  /// principale / non ancora assegnato.
+  final String? portfolioId;
+
   bool get isLeveraged => leverage > 1;
 
   double get costBasis => quantity * avgPrice;
@@ -94,6 +99,7 @@ class Holding {
     DistributionPolicy? distribution,
     String? currency,
     int? leverage,
+    String? portfolioId,
   }) {
     return Holding(
       id: id,
@@ -107,6 +113,7 @@ class Holding {
       distribution: distribution ?? this.distribution,
       currency: currency ?? this.currency,
       leverage: leverage ?? this.leverage,
+      portfolioId: portfolioId ?? this.portfolioId,
     );
   }
 
@@ -123,6 +130,7 @@ class Holding {
       distribution: DistributionPolicy.fromName(map['distribution'] as String?),
       currency: (map['currency'] as String?) ?? 'EUR',
       leverage: (map['leverage'] as num?)?.toInt() ?? 1,
+      portfolioId: map['portfolio_id']?.toString(),
     );
   }
 
@@ -140,6 +148,7 @@ class Holding {
       'distribution': distribution.name,
       'currency': currency,
       'leverage': leverage,
+      if (portfolioId != null) 'portfolio_id': portfolioId,
     };
   }
 }

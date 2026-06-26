@@ -6,12 +6,22 @@ import '../../rebalance/domain/rebalance_settings.dart';
 import '../../transactions/domain/transaction.dart';
 import '../domain/broker.dart';
 import '../domain/holding.dart';
+import '../domain/portfolio.dart';
 import '../domain/portfolio_snapshot.dart';
 
 abstract class PortfolioRepository {
-  Future<List<Holding>> fetchHoldings();
+  /// Posizioni del portafoglio indicato (o tutte se [portfolioId] è null).
+  Future<List<Holding>> fetchHoldings([String? portfolioId]);
   Future<Holding> upsertHolding(Holding holding);
   Future<void> deleteHolding(String id);
+
+  /// Portafogli dell'utente (multi-portafoglio).
+  Future<List<Portfolio>> fetchPortfolios();
+  Future<Portfolio> createPortfolio(String name);
+
+  /// Garantisce l'esistenza di un portafoglio "Principale" e vi assegna le
+  /// posizioni/operazioni ancora non collegate. Ritorna il suo id.
+  Future<String> ensureDefaultPortfolio();
 
   /// Inserisce più posizioni in blocco (import CSV). Gli `id` sono ignorati.
   Future<void> importHoldings(List<Holding> holdings);
@@ -39,8 +49,8 @@ abstract class PortfolioRepository {
   Future<List<MoodCheckin>> fetchMoodCheckins();
   Future<void> recordMood(Mood mood);
 
-  /// Registro operazioni (più recenti prima).
-  Future<List<Transaction>> fetchTransactions();
+  /// Registro operazioni del portafoglio indicato (o tutte se null).
+  Future<List<Transaction>> fetchTransactions([String? portfolioId]);
 
   /// Registra un'operazione e aggiorna di conseguenza la posizione aggregata.
   Future<void> recordTransaction(Transaction tx);
@@ -63,6 +73,7 @@ Holding? applyTransaction(Holding? existing, Transaction tx) {
         distribution: tx.distribution,
         currency: tx.currency,
         leverage: tx.leverage,
+        portfolioId: tx.portfolioId,
       );
     }
     final newQty = existing.quantity + tx.quantity;
@@ -94,15 +105,66 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   }
 
   @override
-  Future<List<Holding>> fetchHoldings() async {
-    final rows = await _client
-        .from('holdings')
-        .select()
-        .order('symbol', ascending: true);
+  Future<List<Holding>> fetchHoldings([String? portfolioId]) async {
+    final base = _client.from('holdings').select();
+    final rows = portfolioId == null
+        ? await base.order('symbol', ascending: true)
+        : await base
+            .eq('portfolio_id', int.parse(portfolioId))
+            .order('symbol', ascending: true);
     return (rows as List)
         .cast<Map<String, dynamic>>()
         .map(Holding.fromMap)
         .toList();
+  }
+
+  @override
+  Future<List<Portfolio>> fetchPortfolios() async {
+    final rows =
+        await _client.from('portfolios').select().order('id', ascending: true);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(Portfolio.fromMap)
+        .toList();
+  }
+
+  @override
+  Future<Portfolio> createPortfolio(String name) async {
+    final row = await _client
+        .from('portfolios')
+        .insert({'user_id': _uid, 'name': name})
+        .select()
+        .single();
+    return Portfolio.fromMap(row);
+  }
+
+  @override
+  Future<String> ensureDefaultPortfolio() async {
+    final existing = await _client
+        .from('portfolios')
+        .select()
+        .order('id', ascending: true)
+        .limit(1)
+        .maybeSingle();
+    if (existing != null) return existing['id'].toString();
+    final created = await _client
+        .from('portfolios')
+        .insert({'user_id': _uid, 'name': 'Principale'})
+        .select()
+        .single();
+    final id = created['id'];
+    // Collega le righe ancora senza portafoglio.
+    await _client
+        .from('holdings')
+        .update({'portfolio_id': id})
+        .eq('user_id', _uid)
+        .filter('portfolio_id', 'is', null);
+    await _client
+        .from('transactions')
+        .update({'portfolio_id': id})
+        .eq('user_id', _uid)
+        .filter('portfolio_id', 'is', null);
+    return id.toString();
   }
 
   @override
@@ -252,10 +314,11 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   }
 
   @override
-  Future<List<Transaction>> fetchTransactions() async {
-    final rows = await _client
-        .from('transactions')
-        .select()
+  Future<List<Transaction>> fetchTransactions([String? portfolioId]) async {
+    final base = _client.from('transactions').select();
+    final filtered =
+        portfolioId == null ? base : base.eq('portfolio_id', int.parse(portfolioId));
+    final rows = await filtered
         .order('tx_date', ascending: false)
         .order('id', ascending: false);
     return (rows as List)
@@ -267,12 +330,15 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   @override
   Future<void> recordTransaction(Transaction tx) async {
     await _client.from('transactions').insert(tx.toInsert(_uid));
-    // Aggiorna la posizione aggregata corrispondente.
-    final existingRow = await _client
+    // Aggiorna la posizione aggregata corrispondente (stesso portafoglio).
+    final base = _client
         .from('holdings')
         .select()
         .eq('user_id', _uid)
-        .eq('symbol', tx.symbol.toUpperCase())
+        .eq('symbol', tx.symbol.toUpperCase());
+    final existingRow = await (tx.portfolioId == null
+            ? base.filter('portfolio_id', 'is', null)
+            : base.eq('portfolio_id', int.parse(tx.portfolioId!)))
         .limit(1)
         .maybeSingle();
     final existing =
@@ -336,8 +402,39 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   };
   int _seq = 4;
 
+  final List<Portfolio> _portfolios = [];
+  int _pfSeq = 1;
+
   @override
-  Future<List<Holding>> fetchHoldings() async => List.unmodifiable(_holdings);
+  Future<List<Holding>> fetchHoldings([String? portfolioId]) async {
+    if (portfolioId == null) return List.unmodifiable(_holdings);
+    return List.unmodifiable(
+        _holdings.where((h) => h.portfolioId == portfolioId));
+  }
+
+  @override
+  Future<List<Portfolio>> fetchPortfolios() async =>
+      List.unmodifiable(_portfolios);
+
+  @override
+  Future<Portfolio> createPortfolio(String name) async {
+    final p = Portfolio(id: 'p${_pfSeq++}', name: name);
+    _portfolios.add(p);
+    return p;
+  }
+
+  @override
+  Future<String> ensureDefaultPortfolio() async {
+    if (_portfolios.isNotEmpty) return _portfolios.first.id;
+    final p = Portfolio(id: 'p${_pfSeq++}', name: 'Principale');
+    _portfolios.add(p);
+    for (var i = 0; i < _holdings.length; i++) {
+      if (_holdings[i].portfolioId == null) {
+        _holdings[i] = _holdings[i].copyWith(portfolioId: p.id);
+      }
+    }
+    return p.id;
+  }
 
   @override
   Future<Holding> upsertHolding(Holding holding) async {
@@ -485,8 +582,11 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   final List<Transaction> _txs = [];
 
   @override
-  Future<List<Transaction>> fetchTransactions() async {
-    final list = [..._txs]..sort((a, b) => b.date.compareTo(a.date));
+  Future<List<Transaction>> fetchTransactions([String? portfolioId]) async {
+    final list = [..._txs]
+        .where((t) => portfolioId == null || t.portfolioId == portfolioId)
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
     return List.unmodifiable(list);
   }
 
@@ -510,8 +610,9 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
         leverage: tx.leverage,
       ),
     );
-    final idx =
-        _holdings.indexWhere((h) => h.symbol.toUpperCase() == tx.symbol.toUpperCase());
+    final idx = _holdings.indexWhere((h) =>
+        h.symbol.toUpperCase() == tx.symbol.toUpperCase() &&
+        h.portfolioId == tx.portfolioId);
     final existing = idx >= 0 ? _holdings[idx] : null;
     final updated = applyTransaction(existing, tx);
     if (updated == null) {
@@ -532,6 +633,7 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
         distribution: updated.distribution,
         currency: updated.currency,
         leverage: updated.leverage,
+        portfolioId: updated.portfolioId,
       ));
     }
   }

@@ -255,3 +255,24 @@ create table if not exists public.push_notification_log (
 alter table public.push_notification_log enable row level security;
 drop policy if exists "push_log: select propri" on public.push_notification_log;
 create policy "push_log: select propri" on public.push_notification_log for select using (auth.uid() = user_id);
+
+-- === portfolios (multi-portafoglio) =========================================
+create table if not exists public.portfolios (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.portfolios enable row level security;
+
+drop policy if exists "portfolios: select propri" on public.portfolios;
+drop policy if exists "portfolios: insert propri" on public.portfolios;
+drop policy if exists "portfolios: update propri" on public.portfolios;
+drop policy if exists "portfolios: delete propri" on public.portfolios;
+create policy "portfolios: select propri" on public.portfolios for select using (auth.uid() = user_id);
+create policy "portfolios: insert propri" on public.portfolios for insert with check (auth.uid() = user_id);
+create policy "portfolios: update propri" on public.portfolios for update using (auth.uid() = user_id);
+create policy "portfolios: delete propri" on public.portfolios for delete using (auth.uid() = user_id);
+
+alter table public.holdings add column if not exists portfolio_id bigint references public.portfolios (id) on delete cascade;
+alter table public.transactions add column if not exists portfolio_id bigint references public.portfolios (id) on delete cascade;

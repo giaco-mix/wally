@@ -12,11 +12,14 @@ final transactionsControllerProvider =
 class TransactionsController extends AsyncNotifier<List<Transaction>> {
   @override
   Future<List<Transaction>> build() async {
-    return ref.watch(portfolioRepositoryProvider).fetchTransactions();
+    final pid = ref.watch(currentPortfolioIdProvider);
+    return ref.watch(portfolioRepositoryProvider).fetchTransactions(pid);
   }
 
   Future<void> record(Transaction tx) async {
-    await ref.read(portfolioRepositoryProvider).recordTransaction(tx);
+    final pid = ref.read(currentPortfolioIdProvider);
+    final stamped = pid == null ? tx : tx.copyWith(portfolioId: pid);
+    await ref.read(portfolioRepositoryProvider).recordTransaction(stamped);
     ref.invalidateSelf();
     // Le posizioni aggregate sono cambiate: rinfresca portafoglio e quotazioni.
     ref.invalidate(holdingsControllerProvider);

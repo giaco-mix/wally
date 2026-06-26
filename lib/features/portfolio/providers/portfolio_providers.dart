@@ -4,11 +4,54 @@ import '../../../core/providers.dart';
 import '../../market/domain/quote.dart';
 import '../domain/broker.dart';
 import '../domain/holding.dart';
+import '../domain/portfolio.dart';
 import '../domain/portfolio_costs.dart';
 import '../domain/portfolio_snapshot.dart';
 import '../domain/position.dart';
 
-/// Lista delle posizioni inserite dall'utente (CRUD).
+/// Portafogli dell'utente (multi-portafoglio). Garantisce il "Principale".
+final portfoliosControllerProvider =
+    AsyncNotifierProvider<PortfoliosController, List<Portfolio>>(
+        PortfoliosController.new);
+
+class PortfoliosController extends AsyncNotifier<List<Portfolio>> {
+  @override
+  Future<List<Portfolio>> build() async {
+    final repo = ref.watch(portfolioRepositoryProvider);
+    var list = await repo.fetchPortfolios();
+    if (list.isEmpty) {
+      await repo.ensureDefaultPortfolio();
+      list = await repo.fetchPortfolios();
+    }
+    return list;
+  }
+
+  Future<void> create(String name) async {
+    await ref.read(portfolioRepositoryProvider).createPortfolio(name);
+    ref.invalidateSelf();
+    await future;
+  }
+}
+
+/// Portafoglio selezionato manualmente (null = usa il primo disponibile).
+final selectedPortfolioIdProvider =
+    NotifierProvider<SelectedPortfolioId, String?>(SelectedPortfolioId.new);
+
+class SelectedPortfolioId extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void select(String? id) => state = id;
+}
+
+/// Id del portafoglio attualmente in vista.
+final currentPortfolioIdProvider = Provider<String?>((ref) {
+  final selected = ref.watch(selectedPortfolioIdProvider);
+  final list = ref.watch(portfoliosControllerProvider).asData?.value ?? const [];
+  if (selected != null && list.any((p) => p.id == selected)) return selected;
+  return list.isEmpty ? null : list.first.id;
+});
+
+/// Lista delle posizioni del portafoglio in vista (CRUD).
 final holdingsControllerProvider =
     AsyncNotifierProvider<HoldingsController, List<Holding>>(
         HoldingsController.new);
@@ -16,12 +59,15 @@ final holdingsControllerProvider =
 class HoldingsController extends AsyncNotifier<List<Holding>> {
   @override
   Future<List<Holding>> build() async {
-    return ref.watch(portfolioRepositoryProvider).fetchHoldings();
+    final pid = ref.watch(currentPortfolioIdProvider);
+    return ref.watch(portfolioRepositoryProvider).fetchHoldings(pid);
   }
 
   Future<void> save(Holding holding) async {
     final repo = ref.read(portfolioRepositoryProvider);
-    await repo.upsertHolding(holding);
+    final pid = ref.read(currentPortfolioIdProvider);
+    await repo.upsertHolding(
+        pid == null ? holding : holding.copyWith(portfolioId: pid));
     ref.invalidateSelf();
     await future;
   }
@@ -36,7 +82,11 @@ class HoldingsController extends AsyncNotifier<List<Holding>> {
   /// Import in blocco (CSV broker).
   Future<void> importHoldings(List<Holding> holdings) async {
     final repo = ref.read(portfolioRepositoryProvider);
-    await repo.importHoldings(holdings);
+    final pid = ref.read(currentPortfolioIdProvider);
+    final stamped = pid == null
+        ? holdings
+        : holdings.map((h) => h.copyWith(portfolioId: pid)).toList();
+    await repo.importHoldings(stamped);
     ref.invalidateSelf();
     await future;
   }
