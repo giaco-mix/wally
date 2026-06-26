@@ -273,6 +273,8 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
       sector: holding.sector,
       ter: holding.ter,
       distribution: holding.distribution,
+      currency: holding.currency,
+      leverage: holding.leverage,
     );
     _holdings.add(withId);
     return withId;

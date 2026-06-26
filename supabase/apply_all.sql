@@ -50,6 +50,8 @@ create table if not exists public.holdings (
 );
 alter table public.holdings add column if not exists ter numeric not null default 0;
 alter table public.holdings add column if not exists distribution text;
+alter table public.holdings add column if not exists currency text not null default 'EUR';
+alter table public.holdings add column if not exists leverage int not null default 1;
 create index if not exists holdings_user_idx on public.holdings (user_id);
 alter table public.holdings enable row level security;
 

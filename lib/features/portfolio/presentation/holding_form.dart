@@ -33,6 +33,8 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
   late final TextEditingController _ter;
   late AssetClass _assetClass;
   late DistributionPolicy _distribution;
+  late String _currency;
+  late int _leverage;
   bool _saving = false;
 
   bool get _isEdit => widget.existing != null;
@@ -50,6 +52,8 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
     );
     _assetClass = h?.assetClass ?? AssetClass.stock;
     _distribution = h?.distribution ?? DistributionPolicy.none;
+    _currency = h?.currency ?? 'EUR';
+    _leverage = h?.leverage ?? 1;
   }
 
   @override
@@ -78,6 +82,8 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
       sector: widget.existing?.sector,
       ter: ter,
       distribution: _distribution,
+      currency: _currency,
+      leverage: _leverage,
     );
     try {
       await ref.read(holdingsControllerProvider.notifier).save(holding);
@@ -210,6 +216,39 @@ class _HoldingFormState extends ConsumerState<_HoldingForm> {
                       ],
                       onChanged: (v) =>
                           setState(() => _distribution = v ?? _distribution),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _currency,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Valuta'),
+                      items: const [
+                        DropdownMenuItem(value: 'EUR', child: Text('EUR €')),
+                        DropdownMenuItem(value: 'USD', child: Text('USD \$')),
+                      ],
+                      onChanged: (v) =>
+                          setState(() => _currency = v ?? _currency),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      initialValue: _leverage,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Leva'),
+                      items: const [
+                        DropdownMenuItem(value: 1, child: Text('Nessuna (1x)')),
+                        DropdownMenuItem(value: 2, child: Text('2x')),
+                        DropdownMenuItem(value: 3, child: Text('3x')),
+                      ],
+                      onChanged: (v) =>
+                          setState(() => _leverage = v ?? _leverage),
                     ),
                   ),
                 ],

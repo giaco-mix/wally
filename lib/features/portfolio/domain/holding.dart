@@ -55,6 +55,8 @@ class Holding {
     this.sector,
     this.ter = 0,
     this.distribution = DistributionPolicy.none,
+    this.currency = 'EUR',
+    this.leverage = 1,
   });
 
   final String id;
@@ -71,6 +73,14 @@ class Holding {
   /// Politica dei dividendi (ACC/DIST), rilevante per fondi ed ETF.
   final DistributionPolicy distribution;
 
+  /// Valuta dello strumento (per ora EUR o USD, le principali in Italia).
+  final String currency;
+
+  /// Fattore di leva (1 = nessuna leva; 2/3 = ETF a leva 2x/3x).
+  final int leverage;
+
+  bool get isLeveraged => leverage > 1;
+
   double get costBasis => quantity * avgPrice;
 
   Holding copyWith({
@@ -82,6 +92,8 @@ class Holding {
     String? sector,
     double? ter,
     DistributionPolicy? distribution,
+    String? currency,
+    int? leverage,
   }) {
     return Holding(
       id: id,
@@ -93,6 +105,8 @@ class Holding {
       sector: sector ?? this.sector,
       ter: ter ?? this.ter,
       distribution: distribution ?? this.distribution,
+      currency: currency ?? this.currency,
+      leverage: leverage ?? this.leverage,
     );
   }
 
@@ -107,6 +121,8 @@ class Holding {
       sector: map['sector'] as String?,
       ter: (map['ter'] as num?)?.toDouble() ?? 0,
       distribution: DistributionPolicy.fromName(map['distribution'] as String?),
+      currency: (map['currency'] as String?) ?? 'EUR',
+      leverage: (map['leverage'] as num?)?.toInt() ?? 1,
     );
   }
 
@@ -122,6 +138,8 @@ class Holding {
       'sector': sector,
       'ter': ter,
       'distribution': distribution.name,
+      'currency': currency,
+      'leverage': leverage,
     };
   }
 }
