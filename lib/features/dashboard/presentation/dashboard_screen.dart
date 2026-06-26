@@ -122,9 +122,11 @@ class _PortfolioMenu extends ConsumerWidget {
 
   Future<void> _createDialog(BuildContext context, WidgetRef ref) async {
     final ctrl = TextEditingController();
+    // Usa il context del dialog (non quello esterno della dashboard) per il
+    // pop: altrimenti chiuderebbe la pagina dello shell -> schermata bianca.
     final name = await showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Nuovo portafoglio'),
         content: TextField(
           controller: ctrl,
@@ -133,16 +135,18 @@ class _PortfolioMenu extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Annulla'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(ctrl.text.trim()),
             child: const Text('Crea'),
           ),
         ],
       ),
     );
+    ctrl.dispose();
     if (name == null || name.isEmpty) return;
     await ref.read(portfoliosControllerProvider.notifier).create(name);
     final list = ref.read(portfoliosControllerProvider).asData?.value ?? const [];
