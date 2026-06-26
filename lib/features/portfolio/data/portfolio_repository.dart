@@ -26,24 +26,26 @@ abstract class PortfolioRepository {
   /// Inserisce più posizioni in blocco (import CSV). Gli `id` sono ignorati.
   Future<void> importHoldings(List<Holding> holdings);
 
-  /// Allocazioni target: mappa assetClass.name -> percentuale (0..100).
-  Future<Map<String, double>> fetchTargets();
-  Future<void> saveTargets(Map<String, double> targets);
+  /// Allocazioni target del portafoglio: assetClass.name -> percentuale.
+  Future<Map<String, double>> fetchTargets([String? portfolioId]);
+  Future<void> saveTargets(Map<String, double> targets, [String? portfolioId]);
 
   /// Storico del valore del portafoglio (ordinato per data crescente).
-  Future<List<PortfolioSnapshot>> fetchSnapshots();
+  Future<List<PortfolioSnapshot>> fetchSnapshots([String? portfolioId]);
 
   /// Registra (o aggiorna) lo snapshot del giorno indicato.
-  Future<void> recordSnapshot(DateTime date, double totalValue);
+  Future<void> recordSnapshot(DateTime date, double totalValue,
+      [String? portfolioId]);
 
   /// Broker/piattaforme dell'utente.
   Future<List<Broker>> fetchBrokers();
   Future<void> upsertBroker(Broker broker);
   Future<void> deleteBroker(String id);
 
-  /// Impostazioni di ribilanciamento schedulato.
-  Future<RebalanceSettings> fetchRebalanceSettings();
-  Future<void> saveRebalanceSettings(RebalanceSettings settings);
+  /// Impostazioni di ribilanciamento schedulato del portafoglio.
+  Future<RebalanceSettings> fetchRebalanceSettings([String? portfolioId]);
+  Future<void> saveRebalanceSettings(RebalanceSettings settings,
+      [String? portfolioId]);
 
   /// Check-in dello stato d'animo (più recenti prima).
   Future<List<MoodCheckin>> fetchMoodCheckins();
@@ -153,17 +155,22 @@ class SupabasePortfolioRepository implements PortfolioRepository {
         .select()
         .single();
     final id = created['id'];
-    // Collega le righe ancora senza portafoglio.
-    await _client
-        .from('holdings')
-        .update({'portfolio_id': id})
-        .eq('user_id', _uid)
-        .filter('portfolio_id', 'is', null);
-    await _client
-        .from('transactions')
-        .update({'portfolio_id': id})
-        .eq('user_id', _uid)
-        .filter('portfolio_id', 'is', null);
+    // Collega le righe ancora senza portafoglio (posizioni, operazioni e
+    // l'intera strategia: piano, target, cadenza, storico).
+    for (final table in const [
+      'holdings',
+      'transactions',
+      'plans',
+      'target_allocations',
+      'rebalance_settings',
+      'portfolio_snapshots',
+    ]) {
+      await _client
+          .from(table)
+          .update({'portfolio_id': id})
+          .eq('user_id', _uid)
+          .filter('portfolio_id', 'is', null);
+    }
     return id.toString();
   }
 
@@ -198,8 +205,11 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   }
 
   @override
-  Future<Map<String, double>> fetchTargets() async {
-    final rows = await _client.from('target_allocations').select();
+  Future<Map<String, double>> fetchTargets([String? portfolioId]) async {
+    final base = _client.from('target_allocations').select();
+    final rows = portfolioId == null
+        ? await base
+        : await base.eq('portfolio_id', int.parse(portfolioId));
     return {
       for (final r in (rows as List).cast<Map<String, dynamic>>())
         r['asset_class'] as String: (r['target_pct'] as num).toDouble(),
@@ -207,21 +217,33 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   }
 
   @override
-  Future<void> saveTargets(Map<String, double> targets) async {
-    await _client.from('target_allocations').delete().eq('user_id', _uid);
+  Future<void> saveTargets(Map<String, double> targets,
+      [String? portfolioId]) async {
+    final del = _client.from('target_allocations').delete().eq('user_id', _uid);
+    if (portfolioId == null) {
+      await del.filter('portfolio_id', 'is', null);
+    } else {
+      await del.eq('portfolio_id', int.parse(portfolioId));
+    }
     if (targets.isEmpty) return;
     await _client.from('target_allocations').insert([
       for (final e in targets.entries)
-        {'user_id': _uid, 'asset_class': e.key, 'target_pct': e.value},
+        {
+          'user_id': _uid,
+          'asset_class': e.key,
+          'target_pct': e.value,
+          if (portfolioId != null) 'portfolio_id': int.parse(portfolioId),
+        },
     ]);
   }
 
   @override
-  Future<List<PortfolioSnapshot>> fetchSnapshots() async {
-    final rows = await _client
-        .from('portfolio_snapshots')
-        .select()
-        .order('snapshot_date', ascending: true);
+  Future<List<PortfolioSnapshot>> fetchSnapshots([String? portfolioId]) async {
+    final base = _client.from('portfolio_snapshots').select();
+    final filtered = portfolioId == null
+        ? base
+        : base.eq('portfolio_id', int.parse(portfolioId));
+    final rows = await filtered.order('snapshot_date', ascending: true);
     return (rows as List)
         .cast<Map<String, dynamic>>()
         .map(PortfolioSnapshot.fromMap)
@@ -229,14 +251,16 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   }
 
   @override
-  Future<void> recordSnapshot(DateTime date, double totalValue) async {
+  Future<void> recordSnapshot(DateTime date, double totalValue,
+      [String? portfolioId]) async {
     await _client.from('portfolio_snapshots').upsert(
       {
         'user_id': _uid,
         'snapshot_date': _dateKey(date),
         'total_value': totalValue,
+        if (portfolioId != null) 'portfolio_id': int.parse(portfolioId),
       },
-      onConflict: 'user_id,snapshot_date',
+      onConflict: 'user_id,portfolio_id,snapshot_date',
     );
   }
 
@@ -267,18 +291,19 @@ class SupabasePortfolioRepository implements PortfolioRepository {
   }
 
   @override
-  Future<RebalanceSettings> fetchRebalanceSettings() async {
-    final row = await _client
-        .from('rebalance_settings')
-        .select()
-        .eq('user_id', _uid)
+  Future<RebalanceSettings> fetchRebalanceSettings([String? portfolioId]) async {
+    final base = _client.from('rebalance_settings').select().eq('user_id', _uid);
+    final row = await (portfolioId == null
+            ? base.filter('portfolio_id', 'is', null)
+            : base.eq('portfolio_id', int.parse(portfolioId)))
         .maybeSingle();
     if (row == null) return const RebalanceSettings();
     return RebalanceSettings.fromMap(row);
   }
 
   @override
-  Future<void> saveRebalanceSettings(RebalanceSettings settings) async {
+  Future<void> saveRebalanceSettings(RebalanceSettings settings,
+      [String? portfolioId]) async {
     await _client.from('rebalance_settings').upsert(
       {
         'user_id': _uid,
@@ -287,8 +312,9 @@ class SupabasePortfolioRepository implements PortfolioRepository {
             ? null
             : _dateKey(settings.lastRebalancedAt!),
         'updated_at': DateTime.now().toIso8601String(),
+        if (portfolioId != null) 'portfolio_id': int.parse(portfolioId),
       },
-      onConflict: 'user_id',
+      onConflict: 'user_id,portfolio_id',
     );
   }
 
@@ -482,11 +508,15 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
     }
   }
 
+  // NB: in demo lo scoping per-portafoglio è ignorato (stato condiviso); lo
+  // scoping reale avviene su Supabase.
   @override
-  Future<Map<String, double>> fetchTargets() async => Map.of(_targets);
+  Future<Map<String, double>> fetchTargets([String? portfolioId]) async =>
+      Map.of(_targets);
 
   @override
-  Future<void> saveTargets(Map<String, double> targets) async {
+  Future<void> saveTargets(Map<String, double> targets,
+      [String? portfolioId]) async {
     _targets = Map.of(targets);
   }
 
@@ -507,7 +537,7 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   }
 
   @override
-  Future<List<PortfolioSnapshot>> fetchSnapshots() async {
+  Future<List<PortfolioSnapshot>> fetchSnapshots([String? portfolioId]) async {
     _seedSnapshots();
     final list = _snapshots.values.toList()
       ..sort((a, b) => a.date.compareTo(b.date));
@@ -515,7 +545,8 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   }
 
   @override
-  Future<void> recordSnapshot(DateTime date, double totalValue) async {
+  Future<void> recordSnapshot(DateTime date, double totalValue,
+      [String? portfolioId]) async {
     _seedSnapshots();
     final day = DateTime(date.year, date.month, date.day);
     _snapshots[_dateKey(day)] =
@@ -560,11 +591,12 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   RebalanceSettings _rebalanceSettings = const RebalanceSettings();
 
   @override
-  Future<RebalanceSettings> fetchRebalanceSettings() async =>
+  Future<RebalanceSettings> fetchRebalanceSettings([String? portfolioId]) async =>
       _rebalanceSettings;
 
   @override
-  Future<void> saveRebalanceSettings(RebalanceSettings settings) async {
+  Future<void> saveRebalanceSettings(RebalanceSettings settings,
+      [String? portfolioId]) async {
     _rebalanceSettings = settings;
   }
 

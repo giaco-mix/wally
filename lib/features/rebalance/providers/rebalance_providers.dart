@@ -47,7 +47,8 @@ final rebalanceSettingsControllerProvider =
 class RebalanceSettingsController extends AsyncNotifier<RebalanceSettings> {
   @override
   Future<RebalanceSettings> build() async {
-    return ref.watch(portfolioRepositoryProvider).fetchRebalanceSettings();
+    final pid = ref.watch(currentPortfolioIdProvider);
+    return ref.watch(portfolioRepositoryProvider).fetchRebalanceSettings(pid);
   }
 
   /// Imposta la cadenza; se non c'è ancora una data base, parte da oggi.
@@ -58,7 +59,10 @@ class RebalanceSettingsController extends AsyncNotifier<RebalanceSettings> {
       lastRebalancedAt: current.lastRebalancedAt ??
           (freq == RebalanceFrequency.none ? null : DateTime.now()),
     );
-    await ref.read(portfolioRepositoryProvider).saveRebalanceSettings(next);
+    final pid = ref.read(currentPortfolioIdProvider);
+    await ref
+        .read(portfolioRepositoryProvider)
+        .saveRebalanceSettings(next, pid);
     ref.invalidateSelf();
     await future;
   }
@@ -67,7 +71,10 @@ class RebalanceSettingsController extends AsyncNotifier<RebalanceSettings> {
   Future<void> markRebalanced() async {
     final current = state.asData?.value ?? const RebalanceSettings();
     final next = current.copyWith(lastRebalancedAt: DateTime.now());
-    await ref.read(portfolioRepositoryProvider).saveRebalanceSettings(next);
+    final pid = ref.read(currentPortfolioIdProvider);
+    await ref
+        .read(portfolioRepositoryProvider)
+        .saveRebalanceSettings(next, pid);
     ref.invalidateSelf();
     await future;
   }

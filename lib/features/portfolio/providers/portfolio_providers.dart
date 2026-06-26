@@ -168,11 +168,13 @@ final targetsControllerProvider =
 class TargetsController extends AsyncNotifier<Map<String, double>> {
   @override
   Future<Map<String, double>> build() async {
-    return ref.watch(portfolioRepositoryProvider).fetchTargets();
+    final pid = ref.watch(currentPortfolioIdProvider);
+    return ref.watch(portfolioRepositoryProvider).fetchTargets(pid);
   }
 
   Future<void> save(Map<String, double> targets) async {
-    await ref.read(portfolioRepositoryProvider).saveTargets(targets);
+    final pid = ref.read(currentPortfolioIdProvider);
+    await ref.read(portfolioRepositoryProvider).saveTargets(targets, pid);
     ref.invalidateSelf();
     await future;
   }
@@ -188,7 +190,8 @@ class PerformanceController extends AsyncNotifier<List<PortfolioSnapshot>> {
 
   @override
   Future<List<PortfolioSnapshot>> build() async {
-    return ref.watch(portfolioRepositoryProvider).fetchSnapshots();
+    final pid = ref.watch(currentPortfolioIdProvider);
+    return ref.watch(portfolioRepositoryProvider).fetchSnapshots(pid);
   }
 
   /// Registra lo snapshot di oggi se il valore è cambiato in modo
@@ -199,9 +202,10 @@ class PerformanceController extends AsyncNotifier<List<PortfolioSnapshot>> {
       return;
     }
     _lastRecorded = totalValue;
+    final pid = ref.read(currentPortfolioIdProvider);
     await ref
         .read(portfolioRepositoryProvider)
-        .recordSnapshot(DateTime.now(), totalValue);
+        .recordSnapshot(DateTime.now(), totalValue, pid);
     ref.invalidateSelf();
   }
 }
