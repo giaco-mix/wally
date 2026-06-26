@@ -56,7 +56,9 @@ class TransactionsScreen extends ConsumerWidget {
                     child: Icon(buy ? Icons.add : Icons.remove,
                         color: buy ? Colors.green : Colors.red),
                   ),
-                  title: Text('${t.symbol} · ${t.kind.label}',
+                  title: Text(
+                      '${t.symbol} · ${t.kind.label}'
+                      '${t.sleeve == TxSleeve.none ? '' : ' · ${t.sleeve.label}'}',
                       style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text(
                       '${_d(t.date)} · ${Fmt.ratio(t.quantity)} × ${Fmt.money(t.price)}'),
@@ -96,6 +98,7 @@ class _TxFormState extends ConsumerState<_TxForm> {
   final _price = TextEditingController();
   TxSide _side = TxSide.buy;
   TxKind _kind = TxKind.pac;
+  TxSleeve _sleeve = TxSleeve.none;
   AssetClass _assetClass = AssetClass.etf;
   String _currency = 'EUR';
   DateTime _date = DateTime.now();
@@ -158,6 +161,7 @@ class _TxFormState extends ConsumerState<_TxForm> {
       price: _num(_price)!,
       assetClass: _assetClass,
       currency: _currency,
+      sleeve: _sleeve,
     );
     try {
       await ref.read(transactionsControllerProvider.notifier).record(tx);
@@ -209,15 +213,34 @@ class _TxFormState extends ConsumerState<_TxForm> {
                 },
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<TxKind>(
-                initialValue: _kind,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Tipo'),
-                items: [
-                  for (final k in TxKind.values)
-                    DropdownMenuItem(value: k, child: Text(k.label)),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<TxKind>(
+                      initialValue: _kind,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Tipo'),
+                      items: [
+                        for (final k in TxKind.values)
+                          DropdownMenuItem(value: k, child: Text(k.label)),
+                      ],
+                      onChanged: (v) => setState(() => _kind = v ?? _kind),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<TxSleeve>(
+                      initialValue: _sleeve,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Comparto'),
+                      items: [
+                        for (final s in TxSleeve.values)
+                          DropdownMenuItem(value: s, child: Text(s.label)),
+                      ],
+                      onChanged: (v) => setState(() => _sleeve = v ?? _sleeve),
+                    ),
+                  ),
                 ],
-                onChanged: (v) => setState(() => _kind = v ?? _kind),
               ),
               const SizedBox(height: 12),
               InkWell(

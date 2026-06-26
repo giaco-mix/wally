@@ -218,6 +218,7 @@ create table if not exists public.transactions (
   created_at timestamptz not null default now()
 );
 create index if not exists tx_user_date_idx on public.transactions (user_id, tx_date desc);
+alter table public.transactions add column if not exists sleeve text not null default 'none';
 alter table public.transactions enable row level security;
 
 drop policy if exists "tx: select propri" on public.transactions;

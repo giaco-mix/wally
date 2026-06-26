@@ -26,6 +26,20 @@ enum TxKind {
       TxKind.values.firstWhere((e) => e.name == n, orElse: () => TxKind.manual);
 }
 
+/// Comparto del PAC: alcuni piani alternano una parte "core" (l'ossatura, es.
+/// all-world) e una "satellite" (scommesse tematiche) nel tempo.
+enum TxSleeve {
+  none('—'),
+  core('Core'),
+  satellite('Satellite');
+
+  const TxSleeve(this.label);
+  final String label;
+
+  static TxSleeve fromName(String? n) => TxSleeve.values
+      .firstWhere((e) => e.name == n, orElse: () => TxSleeve.none);
+}
+
 /// Una singola operazione del registro (ledger): acquisto/vendita di uno
 /// strumento in una data, con prezzo e quantità. Le posizioni correnti
 /// (`holdings`) sono l'aggregato di queste operazioni.
@@ -45,6 +59,7 @@ class Transaction {
     this.distribution = DistributionPolicy.none,
     this.leverage = 1,
     this.portfolioId,
+    this.sleeve = TxSleeve.none,
   });
 
   final String? id;
@@ -61,6 +76,7 @@ class Transaction {
   final DistributionPolicy distribution;
   final int leverage;
   final String? portfolioId;
+  final TxSleeve sleeve;
 
   /// Controvalore dell'operazione.
   double get amount => quantity * price;
@@ -81,6 +97,7 @@ class Transaction {
       distribution: distribution,
       leverage: leverage,
       portfolioId: portfolioId ?? this.portfolioId,
+      sleeve: sleeve,
     );
   }
 
@@ -100,6 +117,7 @@ class Transaction {
       distribution: DistributionPolicy.fromName(m['distribution'] as String?),
       leverage: (m['leverage'] as num?)?.toInt() ?? 1,
       portfolioId: m['portfolio_id']?.toString(),
+      sleeve: TxSleeve.fromName(m['sleeve'] as String?),
     );
   }
 
@@ -120,6 +138,7 @@ class Transaction {
       'distribution': distribution.name,
       'leverage': leverage,
       if (portfolioId != null) 'portfolio_id': portfolioId,
+      'sleeve': sleeve.name,
     };
   }
 }
