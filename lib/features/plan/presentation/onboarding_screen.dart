@@ -10,6 +10,7 @@ import '../domain/pac_calculator.dart';
 import '../domain/pac_frequency.dart';
 import '../domain/risk_profile.dart';
 import '../providers/plan_providers.dart';
+import 'widgets/risk_quiz.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -270,6 +271,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       children: [
         _title('Che tipo di investitore sei?',
             'Non esistono scelte giuste o sbagliate: solo quella giusta per te.'),
+        OutlinedButton.icon(
+          onPressed: () async {
+            final suggested = await showRiskQuiz(context);
+            if (suggested != null) {
+              setState(() {
+                _risk = suggested;
+                _lazyId = LazyPortfolio.forProfile(suggested).id;
+              });
+            }
+          },
+          icon: const Icon(Icons.psychology_outlined),
+          label: const Text('Non sai quale scegliere? Fai il test'),
+        ),
+        const SizedBox(height: 12),
         ...RiskProfile.values.map((r) {
           final selected = _risk == r;
           return Card(
