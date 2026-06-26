@@ -21,6 +21,11 @@ class PortfolioScreen extends ConsumerWidget {
         title: const Text('Portafoglio'),
         actions: [
           IconButton(
+            tooltip: 'Movimenti',
+            icon: const Icon(Icons.receipt_long_outlined),
+            onPressed: () => context.go('/transactions'),
+          ),
+          IconButton(
             tooltip: 'Importa da CSV',
             icon: const Icon(Icons.upload_file),
             onPressed: () => Navigator.of(context).push(

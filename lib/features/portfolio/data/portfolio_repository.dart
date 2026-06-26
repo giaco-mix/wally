@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../coach/domain/mood.dart';
 import '../../coach/domain/mood_checkin.dart';
 import '../../rebalance/domain/rebalance_settings.dart';
+import '../../transactions/domain/transaction.dart';
 import '../domain/broker.dart';
 import '../domain/holding.dart';
 import '../domain/portfolio_snapshot.dart';
@@ -37,6 +38,42 @@ abstract class PortfolioRepository {
   /// Check-in dello stato d'animo (più recenti prima).
   Future<List<MoodCheckin>> fetchMoodCheckins();
   Future<void> recordMood(Mood mood);
+
+  /// Registro operazioni (più recenti prima).
+  Future<List<Transaction>> fetchTransactions();
+
+  /// Registra un'operazione e aggiorna di conseguenza la posizione aggregata.
+  Future<void> recordTransaction(Transaction tx);
+  Future<void> deleteTransaction(String id);
+}
+
+/// Applica un'operazione alla posizione aggregata. Ritorna la nuova posizione,
+/// oppure null se la posizione va eliminata (venduta del tutto).
+Holding? applyTransaction(Holding? existing, Transaction tx) {
+  if (tx.side == TxSide.buy) {
+    if (existing == null) {
+      return Holding(
+        id: '',
+        symbol: tx.symbol,
+        name: tx.name,
+        quantity: tx.quantity,
+        avgPrice: tx.price,
+        assetClass: tx.assetClass,
+        ter: tx.ter,
+        distribution: tx.distribution,
+        currency: tx.currency,
+        leverage: tx.leverage,
+      );
+    }
+    final newQty = existing.quantity + tx.quantity;
+    final newAvg = (existing.costBasis + tx.amount) / newQty;
+    return existing.copyWith(quantity: newQty, avgPrice: newAvg);
+  }
+  // Vendita
+  if (existing == null) return existing;
+  final newQty = existing.quantity - tx.quantity;
+  if (newQty <= 0.0000001) return null;
+  return existing.copyWith(quantity: newQty);
 }
 
 String _dateKey(DateTime d) =>
@@ -212,6 +249,52 @@ class SupabasePortfolioRepository implements PortfolioRepository {
       'user_id': _uid,
       'mood': mood.name,
     });
+  }
+
+  @override
+  Future<List<Transaction>> fetchTransactions() async {
+    final rows = await _client
+        .from('transactions')
+        .select()
+        .order('tx_date', ascending: false)
+        .order('id', ascending: false);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(Transaction.fromMap)
+        .toList();
+  }
+
+  @override
+  Future<void> recordTransaction(Transaction tx) async {
+    await _client.from('transactions').insert(tx.toInsert(_uid));
+    // Aggiorna la posizione aggregata corrispondente.
+    final existingRow = await _client
+        .from('holdings')
+        .select()
+        .eq('user_id', _uid)
+        .eq('symbol', tx.symbol.toUpperCase())
+        .limit(1)
+        .maybeSingle();
+    final existing =
+        existingRow == null ? null : Holding.fromMap(existingRow);
+    final updated = applyTransaction(existing, tx);
+    if (updated == null) {
+      if (existing != null) await deleteHolding(existing.id);
+      return;
+    }
+    if (existing == null) {
+      await _client.from('holdings').insert(updated.toInsert(_uid));
+    } else {
+      await _client
+          .from('holdings')
+          .update(updated.toInsert(_uid))
+          .eq('id', int.parse(existing.id));
+    }
+  }
+
+  @override
+  Future<void> deleteTransaction(String id) async {
+    await _client.from('transactions').delete().eq('id', int.parse(id));
   }
 }
 
@@ -397,5 +480,64 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   @override
   Future<void> recordMood(Mood mood) async {
     _moods.insert(0, MoodCheckin(mood: mood, createdAt: DateTime.now()));
+  }
+
+  final List<Transaction> _txs = [];
+
+  @override
+  Future<List<Transaction>> fetchTransactions() async {
+    final list = [..._txs]..sort((a, b) => b.date.compareTo(a.date));
+    return List.unmodifiable(list);
+  }
+
+  @override
+  Future<void> recordTransaction(Transaction tx) async {
+    _txs.insert(
+      0,
+      Transaction(
+        id: (_seq++).toString(),
+        symbol: tx.symbol,
+        name: tx.name,
+        side: tx.side,
+        kind: tx.kind,
+        date: tx.date,
+        quantity: tx.quantity,
+        price: tx.price,
+        assetClass: tx.assetClass,
+        currency: tx.currency,
+        ter: tx.ter,
+        distribution: tx.distribution,
+        leverage: tx.leverage,
+      ),
+    );
+    final idx =
+        _holdings.indexWhere((h) => h.symbol.toUpperCase() == tx.symbol.toUpperCase());
+    final existing = idx >= 0 ? _holdings[idx] : null;
+    final updated = applyTransaction(existing, tx);
+    if (updated == null) {
+      if (idx >= 0) _holdings.removeAt(idx);
+      return;
+    }
+    if (idx >= 0) {
+      _holdings[idx] = updated.copyWith();
+    } else {
+      _holdings.add(Holding(
+        id: (_seq++).toString(),
+        symbol: updated.symbol,
+        name: updated.name,
+        quantity: updated.quantity,
+        avgPrice: updated.avgPrice,
+        assetClass: updated.assetClass,
+        ter: updated.ter,
+        distribution: updated.distribution,
+        currency: updated.currency,
+        leverage: updated.leverage,
+      ));
+    }
+  }
+
+  @override
+  Future<void> deleteTransaction(String id) async {
+    _txs.removeWhere((t) => t.id == id);
   }
 }

@@ -51,6 +51,14 @@ class AccountScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.receipt_long_outlined),
+                  title: const Text('Movimenti'),
+                  subtitle: const Text('Registro operazioni (PAC, extra, vendite)'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/transactions'),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.account_balance_outlined),
                   title: const Text('Piattaforme e commissioni'),
                   subtitle: const Text('Gestisci broker e costi'),
