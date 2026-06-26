@@ -421,15 +421,23 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
       sector: 'Global Equity',
     ),
   ];
-  Map<String, double> _targets = {
-    AssetClass.stock.name: 50,
-    AssetClass.etf.name: 40,
-    AssetClass.cash.name: 10,
+  // Allocazione target di esempio, assegnata al portafoglio Principale.
+  static const Map<String, double> _seedTargets = {
+    'stock': 50,
+    'etf': 40,
+    'cash': 10,
   };
+  final Map<String, Map<String, double>> _targetsByPf = {};
   int _seq = 4;
 
   final List<Portfolio> _portfolios = [];
   int _pfSeq = 1;
+
+  /// Id del portafoglio Principale (per associarvi i dati di esempio).
+  String? _defaultPid;
+
+  /// Risolve la chiave di portafoglio da usare nelle mappe demo.
+  String _key(String? pid) => pid ?? _defaultPid ?? 'default';
 
   @override
   Future<List<Holding>> fetchHoldings([String? portfolioId]) async {
@@ -451,14 +459,21 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
 
   @override
   Future<String> ensureDefaultPortfolio() async {
-    if (_portfolios.isNotEmpty) return _portfolios.first.id;
+    if (_portfolios.isNotEmpty) {
+      _defaultPid ??= _portfolios.first.id;
+      return _portfolios.first.id;
+    }
     final p = Portfolio(id: 'p${_pfSeq++}', name: 'Principale');
     _portfolios.add(p);
+    _defaultPid = p.id;
     for (var i = 0; i < _holdings.length; i++) {
       if (_holdings[i].portfolioId == null) {
         _holdings[i] = _holdings[i].copyWith(portfolioId: p.id);
       }
     }
+    // Associa al Principale i dati di esempio (target + storico).
+    _targetsByPf[p.id] = Map.of(_seedTargets);
+    _snapshotsByPf[p.id] = _buildSeedSnapshots();
     return p.id;
   }
 
@@ -508,38 +523,36 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
     }
   }
 
-  // NB: in demo lo scoping per-portafoglio è ignorato (stato condiviso); lo
-  // scoping reale avviene su Supabase.
   @override
-  Future<Map<String, double>> fetchTargets([String? portfolioId]) async =>
-      Map.of(_targets);
+  Future<Map<String, double>> fetchTargets([String? portfolioId]) async {
+    if (portfolioId == null && _defaultPid == null) return Map.of(_seedTargets);
+    return Map.of(_targetsByPf[_key(portfolioId)] ?? const {});
+  }
 
   @override
   Future<void> saveTargets(Map<String, double> targets,
       [String? portfolioId]) async {
-    _targets = Map.of(targets);
+    _targetsByPf[_key(portfolioId)] = Map.of(targets);
   }
 
-  final Map<String, PortfolioSnapshot> _snapshots = {};
-  bool _seeded = false;
+  final Map<String, Map<String, PortfolioSnapshot>> _snapshotsByPf = {};
 
-  void _seedSnapshots() {
-    if (_seeded) return;
-    _seeded = true;
+  Map<String, PortfolioSnapshot> _buildSeedSnapshots() {
+    final out = <String, PortfolioSnapshot>{};
     final now = DateTime.now();
     var value = 7000.0;
     for (var d = 30; d >= 1; d--) {
       value += (15 - (d % 7) * 4) + (d.isEven ? 25 : -10);
       final day = now.subtract(Duration(days: d));
-      _snapshots[_dateKey(day)] =
-          PortfolioSnapshot(date: day, totalValue: double.parse(value.toStringAsFixed(2)));
+      out[_dateKey(day)] = PortfolioSnapshot(
+          date: day, totalValue: double.parse(value.toStringAsFixed(2)));
     }
+    return out;
   }
 
   @override
   Future<List<PortfolioSnapshot>> fetchSnapshots([String? portfolioId]) async {
-    _seedSnapshots();
-    final list = _snapshots.values.toList()
+    final list = (_snapshotsByPf[_key(portfolioId)] ?? const {}).values.toList()
       ..sort((a, b) => a.date.compareTo(b.date));
     return list;
   }
@@ -547,9 +560,9 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
   @override
   Future<void> recordSnapshot(DateTime date, double totalValue,
       [String? portfolioId]) async {
-    _seedSnapshots();
     final day = DateTime(date.year, date.month, date.day);
-    _snapshots[_dateKey(day)] =
+    final map = _snapshotsByPf.putIfAbsent(_key(portfolioId), () => {});
+    map[_dateKey(day)] =
         PortfolioSnapshot(date: day, totalValue: totalValue);
   }
 
@@ -588,16 +601,17 @@ class InMemoryPortfolioRepository implements PortfolioRepository {
     _brokers.removeWhere((b) => b.id == id);
   }
 
-  RebalanceSettings _rebalanceSettings = const RebalanceSettings();
+  final Map<String, RebalanceSettings> _rsByPf = {};
 
   @override
-  Future<RebalanceSettings> fetchRebalanceSettings([String? portfolioId]) async =>
-      _rebalanceSettings;
+  Future<RebalanceSettings> fetchRebalanceSettings(
+          [String? portfolioId]) async =>
+      _rsByPf[_key(portfolioId)] ?? const RebalanceSettings();
 
   @override
   Future<void> saveRebalanceSettings(RebalanceSettings settings,
       [String? portfolioId]) async {
-    _rebalanceSettings = settings;
+    _rsByPf[_key(portfolioId)] = settings;
   }
 
   final List<MoodCheckin> _moods = [];
