@@ -136,3 +136,29 @@ Far evolvere UI/contenuti in base alle risposte del quiz A1. Ampio, lungo termin
 
 > Vincolo di prodotto sempre valido: restare **educational / portafogli-modello**,
 > NON consulenza personalizzata (MiFID/CONSOB).
+
+---
+
+## Stato implementazione (aggiornato)
+- ✅ **A** — quiz profilo + reality-check rischio/rendimento (onboarding)
+- ✅ **B** — ledger operazioni (PAC a posteriori col prezzo alla data, buy-the-dip, maxi-canone) + cadenza PAC + versamento iniziale nel piano
+- ✅ **C** — valuta (EUR/USD) e leva sugli strumenti
+- ✅ **E** — import posizioni da CSV
+- ✅ **F** — confronto fondi/ETF + dividendi & rendita
+- ✅ **G1** — news sul portafoglio
+- ⏳ **D** — multi-obiettivo / multi-portafoglio: **rinviato di proposito** (vedi piano sotto)
+- 💡 **B3** composizione PAC variabile (core/satellite) e **G2** app adattiva: idee, rinviate
+
+### Piano per D (multi-portafoglio) — da fare in un passo dedicato
+È l'unico pezzo strutturale: oggi `holdings`, `plans`, `targets`, `rebalance_settings`,
+`transactions` sono per-utente. Approccio non-breaking proposto:
+1. Tabella `portfolios (id, user_id, name)` + `ensureDefault` ("Principale").
+2. Colonna `portfolio_id` (nullable) su `holdings` e `transactions`; le righe esistenti
+   (null) appartengono al default.
+3. `selectedPortfolioProvider`; `fetchHoldings/fetchTransactions` filtrano
+   `portfolio_id is null or = selected`; nuove righe ereditano il portafoglio selezionato.
+4. Selettore di portafoglio nella app bar della dashboard.
+5. Decisione UX da prendere insieme: i `plans`/`targets`/`rebalance_settings` restano
+   globali (una strategia) o diventano per-portafoglio? (impatta onboarding e ribilanciamento).
+Motivo del rinvio: tocca tutti i provider che alimentano dashboard/ribilanciamento;
+meglio farlo con verifica end-to-end dedicata e con la scelta UX del punto 5.
