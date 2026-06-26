@@ -1,6 +1,7 @@
 import 'goal.dart';
 import 'lazy_portfolio.dart';
 import 'pac_calculator.dart';
+import 'pac_frequency.dart';
 import 'risk_profile.dart';
 
 /// Come l'utente ha impostato il piano: partendo da un capitale obiettivo
@@ -31,6 +32,8 @@ class InvestmentPlan {
     required this.monthlyContribution,
     required this.riskProfile,
     required this.lazyPortfolioId,
+    this.frequency = PacFrequency.monthly,
+    this.initialLump = 0,
   });
 
   final String? id;
@@ -39,9 +42,21 @@ class InvestmentPlan {
   final PlanMode mode;
   final double? targetAmount;
   final int horizonYears;
+
+  /// Equivalente mensile del versamento (canonico per i calcoli).
   final double monthlyContribution;
   final RiskProfile riskProfile;
   final String lazyPortfolioId;
+
+  /// Cadenza con cui l'utente versa effettivamente.
+  final PacFrequency frequency;
+
+  /// Versamento iniziale una tantum (maxi-canone).
+  final double initialLump;
+
+  /// Importo del singolo versamento secondo la cadenza scelta.
+  double get installmentAmount =>
+      frequency.perInstallment(monthlyContribution);
 
   LazyPortfolio get lazyPortfolio =>
       LazyPortfolio.byId(lazyPortfolioId) ??
@@ -52,14 +67,17 @@ class InvestmentPlan {
         monthly: monthlyContribution,
         years: horizonYears,
         annualReturn: riskProfile.expectedReturn,
+        initialLump: initialLump,
       );
 
-  double get totalContributed => monthlyContribution * horizonYears * 12;
+  double get totalContributed =>
+      monthlyContribution * horizonYears * 12 + initialLump;
 
   List<ProjectionPoint> get projection => PacCalculator.projection(
         monthly: monthlyContribution,
         years: horizonYears,
         annualReturn: riskProfile.expectedReturn,
+        initialLump: initialLump,
       );
 
   InvestmentPlan copyWith({
@@ -71,6 +89,8 @@ class InvestmentPlan {
     double? monthlyContribution,
     RiskProfile? riskProfile,
     String? lazyPortfolioId,
+    PacFrequency? frequency,
+    double? initialLump,
   }) {
     return InvestmentPlan(
       id: id,
@@ -82,6 +102,8 @@ class InvestmentPlan {
       monthlyContribution: monthlyContribution ?? this.monthlyContribution,
       riskProfile: riskProfile ?? this.riskProfile,
       lazyPortfolioId: lazyPortfolioId ?? this.lazyPortfolioId,
+      frequency: frequency ?? this.frequency,
+      initialLump: initialLump ?? this.initialLump,
     );
   }
 
@@ -96,6 +118,8 @@ class InvestmentPlan {
       monthlyContribution: (map['monthly_contribution'] as num).toDouble(),
       riskProfile: RiskProfile.fromName(map['risk_profile'] as String?),
       lazyPortfolioId: map['lazy_portfolio_id'] as String? ?? 'balanced_60_40',
+      frequency: PacFrequency.fromName(map['frequency'] as String?),
+      initialLump: (map['initial_lump'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -110,6 +134,8 @@ class InvestmentPlan {
       'monthly_contribution': monthlyContribution,
       'risk_profile': riskProfile.name,
       'lazy_portfolio_id': lazyPortfolioId,
+      'frequency': frequency.name,
+      'initial_lump': initialLump,
     };
   }
 }

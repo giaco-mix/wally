@@ -26,11 +26,13 @@ class PacCalculator {
     required double monthly,
     required int years,
     required double annualReturn,
+    double initialLump = 0,
   }) {
     final n = years * 12;
     final r = annualReturn / 12;
-    if (r == 0) return monthly * n;
-    return monthly * ((math.pow(1 + r, n) - 1) / r);
+    final lumpFv = r == 0 ? initialLump : initialLump * math.pow(1 + r, n);
+    if (r == 0) return monthly * n + lumpFv;
+    return monthly * ((math.pow(1 + r, n) - 1) / r) + lumpFv.toDouble();
   }
 
   /// Versamento mensile necessario per raggiungere [target] in [years] anni.
@@ -51,19 +53,19 @@ class PacCalculator {
     required double monthly,
     required int years,
     required double annualReturn,
+    double initialLump = 0,
   }) {
     final r = annualReturn / 12;
     final points = <ProjectionPoint>[];
     for (var y = 0; y <= years; y++) {
       final n = y * 12;
-      final contributed = monthly * n;
-      final value = r == 0
-          ? contributed
-          : monthly * ((math.pow(1 + r, n) - 1) / r);
+      final contributed = monthly * n + initialLump;
+      final lumpFv = r == 0 ? initialLump : initialLump * math.pow(1 + r, n);
+      final pacFv = r == 0 ? monthly * n : monthly * ((math.pow(1 + r, n) - 1) / r);
       points.add(ProjectionPoint(
         year: y,
         contributed: contributed,
-        value: value.toDouble(),
+        value: (pacFv + lumpFv).toDouble(),
       ));
     }
     return points;

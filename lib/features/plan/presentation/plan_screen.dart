@@ -109,8 +109,13 @@ class _PlanView extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _kv(context, 'Versamento mensile',
-                    Fmt.money(plan.monthlyContribution)),
+                _kv(context, 'Versamento ${plan.frequency.label.toLowerCase()}',
+                    Fmt.money(plan.installmentAmount)),
+                if (plan.initialLump > 0) ...[
+                  const Divider(),
+                  _kv(context, 'Versamento iniziale',
+                      Fmt.money(plan.initialLump)),
+                ],
                 const Divider(),
                 _kv(context, 'Valore atteso a ${plan.horizonYears} anni',
                     Fmt.money(plan.projectedValue), highlight: true),

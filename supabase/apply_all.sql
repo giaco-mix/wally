@@ -132,6 +132,8 @@ create table if not exists public.plans (
   updated_at timestamptz not null default now(),
   unique (user_id)
 );
+alter table public.plans add column if not exists frequency text not null default 'monthly';
+alter table public.plans add column if not exists initial_lump numeric not null default 0;
 alter table public.plans enable row level security;
 
 drop policy if exists "plans: select propri" on public.plans;

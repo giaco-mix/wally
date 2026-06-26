@@ -7,6 +7,7 @@ import '../domain/goal.dart';
 import '../domain/investment_plan.dart';
 import '../domain/lazy_portfolio.dart';
 import '../domain/pac_calculator.dart';
+import '../domain/pac_frequency.dart';
 import '../domain/risk_profile.dart';
 import '../providers/plan_providers.dart';
 
@@ -27,6 +28,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   PlanMode _mode = PlanMode.sustainableContribution;
   int _horizon = 15;
   final _amount = TextEditingController();
+  final _initial = TextEditingController();
+  PacFrequency _frequency = PacFrequency.monthly;
   String? _lazyId;
   bool _saving = false;
 
@@ -34,22 +37,35 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void dispose() {
     _goalLabel.dispose();
     _amount.dispose();
+    _initial.dispose();
     super.dispose();
   }
+
+  double get _initialLump =>
+      double.tryParse(_initial.text.replaceAll(',', '.').trim()) ?? 0;
 
   double? get _amountValue =>
       double.tryParse(_amount.text.replaceAll(',', '.').trim());
 
   double get _expectedReturn => _risk?.expectedReturn ?? 0.05;
 
+  /// Equivalente mensile del versamento (canonico per i calcoli).
   double? get _computedMonthly {
     final v = _amountValue;
     if (v == null || v <= 0) return null;
     if (_mode == PlanMode.targetCapital) {
+      // Sottrae al target il valore futuro del maxi-canone iniziale.
+      final lumpFv = PacCalculator.futureValue(
+          monthly: 0,
+          years: _horizon,
+          annualReturn: _expectedReturn,
+          initialLump: _initialLump);
+      final net = (v - lumpFv).clamp(0, double.infinity).toDouble();
       return PacCalculator.requiredMonthly(
-          target: v, years: _horizon, annualReturn: _expectedReturn);
+          target: net, years: _horizon, annualReturn: _expectedReturn);
     }
-    return v;
+    // In modalità "quanto verso" l'importo è per-versamento secondo la cadenza.
+    return _frequency.monthlyEquivalent(v);
   }
 
   double? get _computedTarget {
@@ -57,7 +73,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (v == null || v <= 0) return null;
     if (_mode == PlanMode.targetCapital) return v;
     return PacCalculator.futureValue(
-        monthly: v, years: _horizon, annualReturn: _expectedReturn);
+        monthly: _frequency.monthlyEquivalent(v),
+        years: _horizon,
+        annualReturn: _expectedReturn,
+        initialLump: _initialLump);
   }
 
   bool get _canAdvance => switch (_step) {
@@ -114,6 +133,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       monthlyContribution: monthly,
       riskProfile: _risk!,
       lazyPortfolioId: _lazyId ?? LazyPortfolio.forProfile(_risk!).id,
+      frequency: _frequency,
+      initialLump: _initialLump,
     );
     try {
       await ref.read(planControllerProvider.notifier).save(plan);
@@ -315,15 +336,43 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           selected: {_mode},
           onSelectionChanged: (s) => setState(() => _mode = s.first),
         ),
-        const SizedBox(height: 20),
+        if (_mode == PlanMode.sustainableContribution) ...[
+          const SizedBox(height: 16),
+          Text('Ogni quanto versi?',
+              style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final f in PacFrequency.values)
+                ChoiceChip(
+                  label: Text(f.label),
+                  selected: _frequency == f,
+                  onSelected: (_) => setState(() => _frequency = f),
+                ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 16),
         TextField(
           controller: _amount,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             labelText: _mode == PlanMode.targetCapital
                 ? 'Capitale obiettivo (€)'
-                : 'Versamento mensile (€)',
+                : 'Versamento ${_frequency.label.toLowerCase()} (€)',
             prefixIcon: const Icon(Icons.euro),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _initial,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Versamento iniziale (€) — opzionale',
+            helperText: 'Maxi-canone una tantum all\'avvio',
+            prefixIcon: Icon(Icons.savings_outlined),
           ),
           onChanged: (_) => setState(() {}),
         ),
