@@ -66,7 +66,9 @@ class _PortfolioSummary extends StatelessWidget {
     final invested = symbols.fold<double>(0, (a, s) => a + s.invested);
     final current = symbols.fold<double>(
         0, (a, s) => a + (s.currentValue ?? s.invested));
-    final gain = current - invested;
+    final dividends =
+        symbols.fold<double>(0, (a, s) => a + s.dividendsReceived);
+    final gain = current - invested + dividends;
     final gainPct = invested == 0 ? 0.0 : gain / invested * 100;
     final scheme = Theme.of(context).colorScheme;
 
@@ -91,6 +93,9 @@ class _PortfolioSummary extends StatelessWidget {
               style: TextStyle(
                   color: _gainColor(gainPct), fontWeight: FontWeight.w600),
             ),
+            if (dividends > 0)
+              Text('di cui dividendi ${Fmt.money(dividends)}',
+                  style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ),
@@ -127,7 +132,8 @@ class _SymbolCard extends StatelessWidget {
         ),
         subtitle: Text(
           '${perf.lots.length} accumuli · investito ${Fmt.money(perf.invested)}'
-          '${perf.currentValue != null ? ' → ${Fmt.money(perf.currentValue)}' : ''}',
+          '${perf.currentValue != null ? ' → ${Fmt.money(perf.currentValue)}' : ''}'
+          '${perf.dividendsReceived > 0 ? ' · dividendi ${Fmt.money(perf.dividendsReceived)} (tot ${perf.totalReturnPercent == null ? '—' : Fmt.signedPct(perf.totalReturnPercent!)})' : ''}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         children: [

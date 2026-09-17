@@ -46,12 +46,16 @@ class SymbolPerformance {
     required this.name,
     required this.lots,
     required this.currentPrice,
+    this.dividendsReceived = 0,
   });
 
   final String symbol;
   final String name;
   final List<LotPerformance> lots; // aperti, dal più vecchio al più recente
   final double? currentPrice;
+
+  /// Totale dividendi incassati sul titolo (cassa, non reinvestita qui).
+  final double dividendsReceived;
 
   double get quantity => lots.fold(0, (a, l) => a + l.lot.quantity);
   double get invested => lots.fold(0, (a, l) => a + l.invested);
@@ -61,11 +65,24 @@ class SymbolPerformance {
 
   double? get currentValue =>
       currentPrice == null ? null : quantity * currentPrice!;
+
+  /// Guadagno solo da prezzo (senza dividendi).
   double? get gain => currentValue == null ? null : currentValue! - invested;
 
-  /// Rendimento medio (money-weighted) dei lotti aperti.
+  /// Rendimento money-weighted da solo prezzo.
   double? get gainPercent {
     final g = gain;
+    if (g == null || invested == 0) return null;
+    return g / invested * 100;
+  }
+
+  /// Guadagno totale = prezzo + dividendi incassati.
+  double? get totalGain =>
+      gain == null ? null : gain! + dividendsReceived;
+
+  /// Rendimento totale (prezzo + dividendi) sul capitale investito.
+  double? get totalReturnPercent {
+    final g = totalGain;
     if (g == null || invested == 0) return null;
     return g / invested * 100;
   }
@@ -86,8 +103,14 @@ class LotEngine {
   ) {
     final sorted = [...txs]..sort((a, b) => a.date.compareTo(b.date));
     final open = <_OpenLot>[];
+    var dividends = 0.0;
 
     for (final tx in sorted) {
+      if (tx.kind == TxKind.dividend) {
+        // Cassa incassata: non è un movimento di quote.
+        dividends += tx.amount;
+        continue;
+      }
       if (tx.side == TxSide.buy) {
         open.add(_OpenLot(tx.date, tx.kind, tx.sleeve, tx.quantity, tx.price));
       } else {
@@ -120,6 +143,7 @@ class LotEngine {
       name: name,
       lots: lots,
       currentPrice: currentPrice,
+      dividendsReceived: dividends,
     );
   }
 
@@ -145,7 +169,7 @@ class LotEngine {
         entry.value,
         prices[entry.key],
       );
-      if (perf.lots.isNotEmpty) out.add(perf);
+      if (perf.lots.isNotEmpty || perf.dividendsReceived > 0) out.add(perf);
     }
     out.sort((a, b) => (b.currentValue ?? b.invested)
         .compareTo(a.currentValue ?? a.invested));

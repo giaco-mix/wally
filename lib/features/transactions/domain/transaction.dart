@@ -17,6 +17,7 @@ enum TxKind {
   pac('PAC'),
   oneOff('Extra / buy-the-dip'),
   initial('Versamento iniziale'),
+  dividend('Dividendo'),
   manual('Manuale');
 
   const TxKind(this.label);

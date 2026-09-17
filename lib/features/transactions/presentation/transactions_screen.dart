@@ -70,8 +70,9 @@ class TransactionsScreen extends ConsumerWidget {
                       '${t.symbol} · ${t.kind.label}'
                       '${t.sleeve == TxSleeve.none ? '' : ' · ${t.sleeve.label}'}',
                       style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(
-                      '${_d(t.date)} · ${Fmt.ratio(t.quantity)} × ${Fmt.money(t.price)}'),
+                  subtitle: Text(t.kind == TxKind.dividend
+                      ? '${_d(t.date)} · Dividendo incassato'
+                      : '${_d(t.date)} · ${Fmt.ratio(t.quantity)} × ${Fmt.money(t.price)}'),
                   trailing: Text(
                     '${buy ? '+' : '-'}${Fmt.money(t.amount)}',
                     style: TextStyle(
@@ -167,7 +168,8 @@ class _TxFormState extends ConsumerState<_TxForm> {
       side: _side,
       kind: _kind,
       date: _date,
-      quantity: _num(_qty)!,
+      // Il dividendo è cassa: importo nel prezzo, quantità = 1.
+      quantity: _kind == TxKind.dividend ? 1 : _num(_qty)!,
       price: _num(_price)!,
       assetClass: _assetClass,
       currency: _currency,
@@ -269,48 +271,61 @@ class _TxFormState extends ConsumerState<_TxForm> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _qty,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                      ],
-                      decoration: const InputDecoration(labelText: 'Quantità'),
-                      validator: _req,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _price,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: 'Prezzo',
-                        suffixIcon: IconButton(
-                          tooltip: 'Prezzo alla data',
-                          icon: _loadingPrice
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2))
-                              : const Icon(Icons.history),
-                          onPressed: _loadingPrice ? null : _fillPriceAtDate,
-                        ),
+              if (_kind == TxKind.dividend)
+                TextFormField(
+                  controller: _price,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
+                  decoration:
+                      const InputDecoration(labelText: 'Importo dividendo (€)'),
+                  validator: _req,
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _qty,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                        ],
+                        decoration: const InputDecoration(labelText: 'Quantità'),
+                        validator: _req,
                       ),
-                      validator: _req,
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _price,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: 'Prezzo',
+                          suffixIcon: IconButton(
+                            tooltip: 'Prezzo alla data',
+                            icon: _loadingPrice
+                                ? const SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2))
+                                : const Icon(Icons.history),
+                            onPressed: _loadingPrice ? null : _fillPriceAtDate,
+                          ),
+                        ),
+                        validator: _req,
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 12),
               Row(
                 children: [

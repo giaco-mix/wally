@@ -72,6 +72,31 @@ void main() {
     });
   });
 
+  test('i dividendi entrano nel rendimento totale ma non nelle quote', () {
+    final txs = [
+      _buy('VHYL', DateTime(2026, 1, 1), 10, 10), // investito 100
+      Transaction(
+        symbol: 'VHYL',
+        name: 'VHYL',
+        side: TxSide.buy, // ignorato per i dividendi
+        kind: TxKind.dividend,
+        date: DateTime(2026, 6, 1),
+        quantity: 1,
+        price: 5, // 5€ di dividendo incassato
+      ),
+    ];
+    final perf = LotEngine.forSymbol('VHYL', 'Vanguard High Yield', txs, 11);
+
+    // Le quote restano 10 (il dividendo non aggiunge quote).
+    expect(perf.quantity, 10);
+    expect(perf.invested, 100);
+    expect(perf.dividendsReceived, 5);
+    // Solo prezzo: 110 vs 100 = +10%
+    expect(perf.gainPercent, closeTo(10, 1e-9));
+    // Totale: (110 - 100 + 5)/100 = +15%
+    expect(perf.totalReturnPercent, closeTo(15, 1e-9));
+  });
+
   group('LotEngine.forPortfolio', () {
     test('raggruppa per simbolo ed esclude i simboli senza lotti aperti', () {
       final txs = [

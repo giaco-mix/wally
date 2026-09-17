@@ -62,6 +62,9 @@ abstract class PortfolioRepository {
 /// Applica un'operazione alla posizione aggregata. Ritorna la nuova posizione,
 /// oppure null se la posizione va eliminata (venduta del tutto).
 Holding? applyTransaction(Holding? existing, Transaction tx) {
+  // Un dividendo è cassa incassata, non un movimento di quote: non tocca la
+  // posizione aggregata.
+  if (tx.kind == TxKind.dividend) return existing;
   if (tx.side == TxSide.buy) {
     if (existing == null) {
       return Holding(
