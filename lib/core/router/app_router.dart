@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/advisor/presentation/advisor_home_screen.dart';
 import '../../features/analysis/presentation/analysis_screen.dart';
 import '../../features/analysis/presentation/compare_screen.dart';
 import '../../features/analysis/presentation/income_screen.dart';
@@ -105,6 +106,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/rendimento',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: LotPerformanceScreen()),
+          ),
+          GoRoute(
+            path: '/consulente',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: AdvisorHomeScreen()),
           ),
           GoRoute(
             path: '/compare',
