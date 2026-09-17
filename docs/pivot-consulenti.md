@@ -84,3 +84,80 @@ condivisione**, non riscrive il cuore.
 Non partire dal codice: **F0 validazione** con qualche consulente + parere legale sul
 modello. In parallelo, il motore retail (S2/S3/S4…) che stiamo finendo è **la stessa
 base** che servirà: ogni miglioria lì vale anche per il B2B2C.
+
+---
+
+# Appendice — Design tecnico (bozza dettagliata)
+
+> Dettaglio per implementare. **F0 (validazione) resta il primo passo reale**;
+> questo design serve a partire col codice quando decidiamo. Iniziamo con un
+> **prototipo in demo** (dati finti, nessun backend nuovo) per validare la UX.
+
+## D1. Modello dati (Supabase)
+```sql
+-- Ruolo sul profilo esistente (default retail: non-breaking).
+alter table public.profiles
+  add column if not exists role text not null default 'retail';
+  -- valori: 'retail' | 'advisor' | 'client'
+
+-- Relazione consulente ↔ cliente (un consulente ha molti clienti).
+create table if not exists public.advisor_clients (
+  advisor_id uuid not null references auth.users(id) on delete cascade,
+  client_id  uuid not null references auth.users(id) on delete cascade,
+  status text not null default 'pending', -- pending | active | revoked
+  created_at timestamptz not null default now(),
+  primary key (advisor_id, client_id)
+);
+create index if not exists advisor_clients_advisor_idx
+  on public.advisor_clients(advisor_id);
+```
+
+## D2. RLS — il consulente vede i dati dei suoi clienti ATTIVI
+Per ogni tabella dati del cliente (`portfolios`, `holdings`, `transactions`,
+`plans`, `target_allocations`, `rebalance_settings`, `portfolio_snapshots`,
+`mood_checkins`) si **aggiunge** (senza rimuovere "vedi i tuoi") una policy di
+sola lettura per il consulente collegato:
+```sql
+create policy "<tab>: lettura consulente" on public.<tab>
+  for select using (
+    exists (
+      select 1 from public.advisor_clients ac
+      where ac.advisor_id = auth.uid()
+        and ac.client_id  = <tab>.user_id
+        and ac.status = 'active'
+    )
+  );
+```
+> Solo **SELECT**: nella v1 il consulente **guarda**, non scrive i dati del cliente.
+> (Scrittura del consulente = fase successiva, con permessi espliciti.)
+
+## D3. Flusso di invito (collegamento)
+1. Il consulente inserisce l'email del cliente → riga `advisor_clients (advisor, client, 'pending')`.
+   *(Se il cliente non ha ancora un account, l'invito resta pending finché non si registra.)*
+2. Il cliente vede l'invito e **accetta** → `status='active'`.
+3. Da quel momento il consulente vede (in lettura) i portafogli del cliente.
+4. Il cliente può **revocare** in ogni momento (`status='revoked'`) → RLS lo taglia fuori.
+   *(Consenso esplicito e revocabile = requisito GDPR.)*
+
+## D4. UX (schermate)
+- **Consulente — Home**: elenco clienti (nome, valore totale, oggi, scostamento dal
+  target). Ricerca. Azione "Invita cliente".
+- **Consulente — Dettaglio cliente**: il portafoglio del cliente in **sola lettura**
+  (riusa dashboard/allocazioni/rendimento accumuli). In cima: eventuali avvisi
+  ("sta sforando il target", "umore a rischio").
+- **Cliente**: la sua app normale + indicazione "seguito da <consulente>" e (fase 2)
+  eventuali messaggi del consulente.
+- Ingresso: voce in Account visibile solo se `role == 'advisor'`.
+
+## D5. Strategia di rilascio (non-breaking)
+- **Fase demo (ora)**: prototipo con `AdvisorRepository` in-memory + dati finti;
+  schermate consulente reali; nessuna modifica a Supabase. Serve a **validare**.
+- **Fase reale**: migration D1 + policy D2 + invito D3; `role` sul profilo;
+  `AdvisorRepository` Supabase; gating delle schermate su `role`.
+- Il retail resta **invariato** in entrambe le fasi (default `role='retail'`).
+
+## D6. Da decidere (blocca la fase reale, non la demo)
+- Proprietà del dato (cliente vs consulente) → conferma GDPR.
+- Il cliente può agire o solo guardare (v1: sola lettura).
+- Pricing B2B e onboarding dei consulenti.
+- Parere legale prima di clienti reali.
