@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../shared/format.dart';
 import '../../market/domain/price_point.dart';
@@ -16,7 +17,16 @@ class TransactionsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final txs = ref.watch(transactionsControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Movimenti')),
+      appBar: AppBar(
+        title: const Text('Movimenti'),
+        actions: [
+          IconButton(
+            tooltip: 'Rendimento accumuli',
+            icon: const Icon(Icons.query_stats),
+            onPressed: () => context.go('/rendimento'),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showDialog<void>(
           context: context,

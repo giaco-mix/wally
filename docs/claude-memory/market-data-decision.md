@@ -12,4 +12,6 @@ Decisione (giu 2026) sui dati di mercato di Wally:
 - **Quando si sceglierà**: per un'app da PAC basta l'**EOD** (non servono tick real-time) → preferire un tier EOD economico/freemium; valutare se la licenza obbliga a tenere la API key server-side (allora dietro edge function come Yahoo).
 - **Costo delle chiamate**: l'API non ufficiale di Yahoo può rate-limitare → evitare raffiche di richieste (es. niente storico per-riga in liste lunghe). La sparkline è stata limitata alle viste di drill-down (poche righe).
 
-**How to apply:** non implementare i 5 mapping di LicensedMarketRepository finché l'utente non sceglie il provider; non aggiungere feature sui derivati senza richiesta esplicita. Vedi [project_overview](project_overview.md).
+Vincolo (set 2026): **si costruisce tutto in-house, senza servizi terzi a pagamento.** Restare su dati gratuiti (Yahoo). Feature che richiederebbero provider a pagamento (es. esposizione geografica/look-through fondi completo) rimandate. Servizi terzi *gratuiti* (es. OpenFIGI per ISIN) valutabili ma non prioritari.
+
+**How to apply:** non implementare i 5 mapping di LicensedMarketRepository finché l'utente non sceglie il provider; non aggiungere feature sui derivati né dipendenze da API a pagamento senza richiesta esplicita. Vedi [project_overview](project_overview.md).

@@ -17,6 +17,7 @@ import '../../features/plan/presentation/onboarding_screen.dart';
 import '../../features/plan/presentation/plan_screen.dart';
 import '../../features/portfolio/presentation/brokers_screen.dart';
 import '../../features/portfolio/presentation/portfolio_screen.dart';
+import '../../features/transactions/presentation/lot_performance_screen.dart';
 import '../../features/transactions/presentation/transactions_screen.dart';
 import '../../features/rebalance/presentation/notifications_screen.dart';
 import '../../features/rebalance/presentation/rebalance_screen.dart';
@@ -99,6 +100,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/transactions',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: TransactionsScreen()),
+          ),
+          GoRoute(
+            path: '/rendimento',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: LotPerformanceScreen()),
           ),
           GoRoute(
             path: '/compare',

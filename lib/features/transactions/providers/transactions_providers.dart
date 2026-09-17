@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
+import '../domain/lot_performance.dart';
 import '../domain/transaction.dart';
 
 /// Registro delle operazioni dell'utente.
@@ -32,3 +33,18 @@ class TransactionsController extends AsyncNotifier<List<Transaction>> {
     await future;
   }
 }
+
+/// Rendimento per singolo accumulo (per simbolo), calcolato dal ledger e dai
+/// prezzi correnti. Base per la vista "Rendimento accumuli".
+final lotPerformanceProvider =
+    Provider<AsyncValue<List<SymbolPerformance>>>((ref) {
+  final txs = ref.watch(transactionsControllerProvider);
+  final quotes = ref.watch(quotesProvider);
+  return txs.whenData((list) {
+    final prices = <String, double>{
+      for (final e in (quotes.asData?.value ?? const {}).entries)
+        e.key.toUpperCase(): e.value.price,
+    };
+    return LotEngine.forPortfolio(list, prices);
+  });
+});
