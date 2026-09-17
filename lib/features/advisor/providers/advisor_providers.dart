@@ -1,14 +1,66 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_config.dart';
+import '../../../core/providers.dart';
 import '../../market/domain/quote.dart';
 import '../../portfolio/domain/holding.dart';
 import '../../portfolio/domain/position.dart';
+import '../data/advisor_repository.dart';
 import '../domain/advisor_client.dart';
 
-/// Elenco dei clienti del consulente. **Prototipo**: dati dimostrativi in
-/// memoria. Nella fase reale interrogherà Supabase (advisor_clients + RLS).
-final advisorClientsProvider =
-    Provider<List<AdvisorClient>>((ref) => _demoClients);
+final advisorRepositoryProvider = Provider<AdvisorRepository>((ref) {
+  return SupabaseAdvisorRepository(ref.watch(supabaseClientProvider));
+});
+
+/// Vero se le funzioni consulente reali sono disponibili (serve il backend).
+final advisorBackendReadyProvider =
+    Provider<bool>((_) => AppConfig.isConfigured);
+
+/// Clienti del consulente. Con backend reale li carica da Supabase (holdings +
+/// quotazioni); in demo usa dati dimostrativi.
+final advisorClientsProvider = FutureProvider<List<AdvisorClient>>((ref) async {
+  if (!AppConfig.isConfigured) return _demoClients;
+
+  final repo = ref.watch(advisorRepositoryProvider);
+  final links = await repo.fetchActiveClients();
+  if (links.isEmpty) return const [];
+
+  // Carica gli holdings di ogni cliente e raccoglie i simboli.
+  final holdingsByLink = <AdvisorClientLink, List<Holding>>{};
+  final symbols = <String>{};
+  for (final l in links) {
+    if (l.clientId == null) continue;
+    final hs = await repo.clientHoldings(l.clientId!);
+    holdingsByLink[l] = hs;
+    symbols.addAll(hs.map((h) => h.symbol.toUpperCase()));
+  }
+
+  final quotes = symbols.isEmpty
+      ? <String, Quote>{}
+      : await ref.watch(marketRepositoryProvider).quotes(symbols.toList());
+
+  return [
+    for (final entry in holdingsByLink.entries)
+      AdvisorClient(
+        id: entry.key.id.toString(),
+        name: entry.key.label ?? entry.key.email,
+        note: entry.key.label == null ? null : entry.key.email,
+        positions: [
+          for (final h in entry.value)
+            Position(holding: h, quote: quotes[h.symbol.toUpperCase()]),
+        ],
+      ),
+  ];
+});
+
+/// Inviti in attesa indirizzati all'utente corrente (lato cliente).
+final pendingInvitesProvider =
+    FutureProvider<List<AdvisorClientLink>>((ref) async {
+  if (!AppConfig.isConfigured) return const [];
+  return ref.watch(advisorRepositoryProvider).pendingInvitesForMe();
+});
+
+// ── Dati dimostrativi (modalità demo) ───────────────────────────────────────
 
 Position _pos(
   String symbol,
@@ -30,11 +82,7 @@ Position _pos(
       assetClass: ac,
       sector: sector,
     ),
-    quote: Quote(
-      symbol: symbol,
-      price: price,
-      previousClose: prev ?? price,
-    ),
+    quote: Quote(symbol: symbol, price: price, previousClose: prev ?? price),
   );
 }
 

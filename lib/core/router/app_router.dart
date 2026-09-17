@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/advisor/presentation/advisor_home_screen.dart';
+import '../../features/advisor/presentation/advisor_invites_screen.dart';
 import '../../features/analysis/presentation/analysis_screen.dart';
 import '../../features/analysis/presentation/compare_screen.dart';
 import '../../features/analysis/presentation/income_screen.dart';
@@ -111,6 +112,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/consulente',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: AdvisorHomeScreen()),
+          ),
+          GoRoute(
+            path: '/inviti',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: AdvisorInvitesScreen()),
           ),
           GoRoute(
             path: '/compare',

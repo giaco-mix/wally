@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../advisor/providers/advisor_providers.dart';
 import '../providers/auth_providers.dart';
 
 class AccountScreen extends ConsumerWidget {
@@ -12,6 +13,8 @@ class AccountScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider);
     final email = session?.user.email;
+    final inviteCount =
+        ref.watch(pendingInvitesProvider).asData?.value.length ?? 0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
@@ -84,10 +87,21 @@ class AccountScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.groups_outlined),
                   title: const Text('Modalità consulente'),
-                  subtitle: const Text('Anteprima: segui i portafogli dei clienti'),
+                  subtitle:
+                      const Text('Segui i portafogli dei tuoi clienti'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.go('/consulente'),
                 ),
+                if (inviteCount > 0) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.handshake_outlined),
+                    title: const Text('Inviti da consulente'),
+                    subtitle: Text('$inviteCount in attesa'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.go('/inviti'),
+                  ),
+                ],
               ],
             ),
           ),
