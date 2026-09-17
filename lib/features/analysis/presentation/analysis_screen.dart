@@ -43,7 +43,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
               textCapitalization: TextCapitalization.characters,
               decoration: const InputDecoration(
                 labelText: 'Cerca un titolo o ETF',
-                hintText: 'es. Apple, AAPL, VWCE',
+                hintText: 'Nome, ticker o ISIN — es. Apple, AAPL, VWCE.DE',
                 prefixIcon: Icon(Icons.search),
               ),
               onChanged: (v) => setState(() => _query = v),

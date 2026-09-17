@@ -317,7 +317,7 @@ class _SymbolField extends ConsumerWidget {
           textCapitalization: TextCapitalization.characters,
           decoration: const InputDecoration(
             labelText: 'Simbolo / Ticker',
-            hintText: 'es. AAPL',
+            hintText: 'Ticker o ISIN — es. AAPL',
             prefixIcon: Icon(Icons.search),
           ),
           onChanged: (v) => controller.text = v,
