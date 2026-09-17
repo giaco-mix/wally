@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import '../../../shared/format.dart';
+import '../../plan/providers/plan_providers.dart';
+import '../../transactions/domain/transaction.dart';
+import '../../transactions/providers/transactions_providers.dart';
 import '../domain/rebalance.dart';
 import '../domain/rebalance_settings.dart';
 import '../domain/wally_notification.dart';
@@ -97,6 +100,38 @@ final notificationsProvider = Provider<List<WallyNotification>>((ref) {
       route: '/rebalance',
       actionLabel: 'Ribilancia',
     ));
+  }
+
+  // 1b) Promemoria versamento PAC: se c'è un piano con cadenza e l'ultimo
+  // versamento registrato è più vecchio dell'intervallo, ricorda di registrarlo.
+  final plan = ref.watch(planControllerProvider).asData?.value;
+  if (plan != null) {
+    final txs =
+        ref.watch(transactionsControllerProvider).asData?.value ?? const [];
+    final pacDates = txs
+        .where((t) => t.kind == TxKind.pac && t.side == TxSide.buy)
+        .map((t) => t.date)
+        .toList()
+      ..sort();
+    final lastPac = pacDates.isEmpty ? null : pacDates.last;
+    final intervalDays = (365 / plan.frequency.perYear).round();
+    final due = lastPac == null ||
+        DateTime.now().difference(lastPac).inDays >= intervalDays;
+    if (due) {
+      notifications.add(WallyNotification(
+        id: 'pac_due',
+        severity: NotificationSeverity.info,
+        title: 'È il momento del tuo PAC',
+        body: lastPac == null
+            ? 'Registra il tuo primo versamento (in Movimenti): Wally terrà '
+                'traccia del prezzo d\'ingresso e del rendimento di ogni accumulo.'
+            : 'Secondo la tua cadenza ${plan.frequency.label.toLowerCase()} è ora '
+                'del versamento. Registralo in Movimenti (puoi farti mettere il '
+                'prezzo di quel giorno con un tap) per tenere i rendimenti corretti.',
+        route: '/transactions',
+        actionLabel: 'Registra',
+      ));
+    }
   }
 
   // 2) Asset class fuori soglia, con il titolo che pesa di più
