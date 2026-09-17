@@ -175,3 +175,48 @@ Raffinamenti futuri possibili: snapshot/news per-portafoglio nello stato InMemor
    globali (una strategia) o diventano per-portafoglio? (impatta onboarding e ribilanciamento).
 Motivo del rinvio: tocca tutti i provider che alimentano dashboard/ribilanciamento;
 meglio farlo con verifica end-to-end dedicata e con la scelta UX del punto 5.
+
+---
+
+## Spunti socio — audio set 2026 (PAC realistico & grafici corretti)
+
+> Idee raccolte dal socio dopo aver visto l'app. Molte **sono già costruite**
+> (grazie al ledger); qui isoliamo ciò che **manca davvero**, per non rifare cose.
+
+**Già presente (NON rifare):** ledger operazioni per-accumulo con data/prezzo/tipo
+(`lib/features/transactions/`, posizioni = aggregato) · frequenza PAC + maxi-canone
+iniziale · multi-portafoglio · torta per **asset class** e **settore** in dashboard
+con drill-down · notifiche ribilanciamento (promemoria + deviazione oltre soglia) ·
+news · confronto ETF + dividendi/rendita (`/compare`, `/income`) · TER + top holdings
+ETF (da Yahoo).
+
+**Nuovo / da fare:**
+- **S1. Ricerca per ISIN** 🔜 — oggi si cerca solo per ticker/nome. Serve un mapping
+  ISIN→ticker (es. **OpenFIGI**, gratuito) prima di passare a Yahoo.
+- **S2. Motore rendimento per-accumulo + medio** 🔜 *(la "parte più difficile" del socio)*
+  — il ledger ha già i dati (ogni buy PAC con prezzo/data). Manca il **calcolo**:
+  per ogni lotto (accumulo) il rendimento vs il suo prezzo d'ingresso, poi la somma →
+  rendimento medio del titolo, e infine del portafoglio. Serve il prezzo corrente per
+  simbolo (già disponibile) + eventualmente prezzo storico alla data.
+- **S3. Dividendi staccati/reinvestiti** 💡 — includerli nel rendimento. Richiede un
+  tipo di operazione "dividendo/reinvestimento" nel ledger (oggi assente).
+- **S4. Aggiornamento prezzo del PAC** 💡 — il giorno in cui il PAC compra, Wally
+  manda la notifica "inserisci il prezzo d'ingresso". **Modalità sfaticato**: auto-update
+  col prezzo medio di giornata, con avviso "non preciso, correggibile dopo".
+  (Infra notifiche già presente; manca il trigger PAC-due + il flusso di inserimento.)
+- **S5. Esposizione geografica & macro-categorie** 🔜 — torta "% USA / % Europa / …"
+  e per macro-tipo (value / high yield / bond / gold). La torta per settore c'è, ma il
+  **look-through** di un ETF (di cosa è composto, per area/settore) richiede dati di
+  composizione fondi da un provider (Yahoo `topHoldings` è parziale; per completezza →
+  provider licenziato). Aggiornamento anche 1×/giorno.
+- **S6. Ripensare l'inserimento posizione** 💡 — quantità+prezzo medio è poco naturale;
+  meglio partire da "valore attuale + quando è partito il PAC + ogni quanto versa".
+  (Con il ledger si può derivare.)
+- **S7. Import automatico via screenshot (OCR)** 💡 — fotografi le posizioni del broker
+  e le inserisce da solo. Complesso; alternativa già pronta: **import CSV**.
+- **S8. Schermata "come vuoi investire"** 💡 — informativa + domande che portano a un
+  portafoglio suggerito. Parzialmente coperta da quiz profilo + sezione Strategie.
+
+**Nota collaborazione:** si lavora in parallelo con **branch + Pull Request** (vedi
+`docs/onboarding-collaboratore.md`). Ottimo candidato per il socio: **S2** (motore di
+calcolo sul ledger esistente) è autocontenuto e non tocca la UI di altri.
