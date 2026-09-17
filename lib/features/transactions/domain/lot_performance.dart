@@ -60,6 +60,12 @@ class SymbolPerformance {
   double get quantity => lots.fold(0, (a, l) => a + l.lot.quantity);
   double get invested => lots.fold(0, (a, l) => a + l.invested);
 
+  /// Parte dell'investito che proviene da **dividendi reinvestiti** (acquisti
+  /// con i dividendi incassati), utile per distinguerla dai versamenti propri.
+  double get reinvestedInvested => lots
+      .where((l) => l.lot.kind == TxKind.dividendReinvest)
+      .fold(0, (a, l) => a + l.invested);
+
   /// Prezzo medio di carico dei lotti aperti (media ponderata).
   double get avgPrice => quantity == 0 ? 0 : invested / quantity;
 

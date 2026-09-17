@@ -222,6 +222,9 @@ class _TxFormState extends ConsumerState<_TxForm> {
                 onPicked: (sym, name) {
                   _symbol.text = sym;
                   if (_name.text.trim().isEmpty) _name.text = name;
+                  // Modalità "sfaticato": riempi da solo il prezzo di mercato
+                  // del giorno (per i dividendi non ha senso).
+                  if (_kind != TxKind.dividend) _fillPriceAtDate();
                 },
               ),
               const SizedBox(height: 12),
@@ -263,7 +266,12 @@ class _TxFormState extends ConsumerState<_TxForm> {
                     firstDate: DateTime(2000),
                     lastDate: DateTime.now(),
                   );
-                  if (picked != null) setState(() => _date = picked);
+                  if (picked != null) {
+                    setState(() => _date = picked);
+                    if (_kind != TxKind.dividend && _symbol.text.trim().isNotEmpty) {
+                      _fillPriceAtDate();
+                    }
+                  }
                 },
                 child: InputDecorator(
                   decoration: const InputDecoration(labelText: 'Data'),
@@ -309,6 +317,7 @@ class _TxFormState extends ConsumerState<_TxForm> {
                         ],
                         decoration: InputDecoration(
                           labelText: 'Prezzo',
+                          helperText: 'Auto: prezzo del giorno (modificabile)',
                           suffixIcon: IconButton(
                             tooltip: 'Prezzo alla data',
                             icon: _loadingPrice

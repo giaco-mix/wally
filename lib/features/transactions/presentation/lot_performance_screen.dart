@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/format.dart';
 import '../../../shared/widgets/disclaimer_banner.dart';
 import '../domain/lot_performance.dart';
+import '../domain/transaction.dart';
 import '../providers/transactions_providers.dart';
 
 /// "Rendimento accumuli": per ogni titolo mostra come sta andando **ogni
@@ -132,6 +133,7 @@ class _SymbolCard extends StatelessWidget {
         ),
         subtitle: Text(
           '${perf.lots.length} accumuli · investito ${Fmt.money(perf.invested)}'
+          '${perf.reinvestedInvested > 0 ? ' (di cui ${Fmt.money(perf.reinvestedInvested)} reinvestiti)' : ''}'
           '${perf.currentValue != null ? ' → ${Fmt.money(perf.currentValue)}' : ''}'
           '${perf.dividendsReceived > 0 ? ' · dividendi ${Fmt.money(perf.dividendsReceived)} (tot ${perf.totalReturnPercent == null ? '—' : Fmt.signedPct(perf.totalReturnPercent!)})' : ''}',
           style: Theme.of(context).textTheme.bodySmall,
@@ -162,7 +164,8 @@ class _LotRow extends StatelessWidget {
                 Text(LotPerformanceScreen._d(lot.date),
                     style: const TextStyle(fontWeight: FontWeight.w600)),
                 Text(
-                  '${lot.kind.label} · '
+                  '${lot.kind.label}'
+                  '${lot.sleeve == TxSleeve.none ? '' : ' · ${lot.sleeve.label}'} · '
                   '${Fmt.ratio(lot.quantity, decimals: lot.quantity % 1 == 0 ? 0 : 4)} '
                   '× ${Fmt.money(lot.price)}',
                   style: Theme.of(context).textTheme.bodySmall,

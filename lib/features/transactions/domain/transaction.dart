@@ -18,6 +18,7 @@ enum TxKind {
   oneOff('Extra / buy-the-dip'),
   initial('Versamento iniziale'),
   dividend('Dividendo'),
+  dividendReinvest('Dividendo reinvestito'),
   manual('Manuale');
 
   const TxKind(this.label);

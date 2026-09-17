@@ -97,6 +97,26 @@ void main() {
     expect(perf.totalReturnPercent, closeTo(15, 1e-9));
   });
 
+  test('il dividendo reinvestito aggiunge quote (a differenza di quello cassa)', () {
+    final txs = [
+      _buy('SWDA', DateTime(2026, 1, 1), 10, 10), // 100
+      Transaction(
+        symbol: 'SWDA',
+        name: 'SWDA',
+        side: TxSide.buy,
+        kind: TxKind.dividendReinvest,
+        date: DateTime(2026, 6, 1),
+        quantity: 1,
+        price: 12, // reinveste 12€ comprando 1 quota
+      ),
+    ];
+    final perf = LotEngine.forSymbol('SWDA', 'SWDA', txs, 15);
+    expect(perf.quantity, 11); // 10 + 1 (il reinvestito aggiunge quote)
+    expect(perf.invested, 112);
+    expect(perf.reinvestedInvested, 12);
+    expect(perf.dividendsReceived, 0); // non è cassa
+  });
+
   group('LotEngine.forPortfolio', () {
     test('raggruppa per simbolo ed esclude i simboli senza lotti aperti', () {
       final txs = [
