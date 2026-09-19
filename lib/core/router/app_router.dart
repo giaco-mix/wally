@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/presentation/admin_screen.dart';
 import '../../features/advisor/presentation/advisor_home_screen.dart';
 import '../../features/advisor/presentation/advisor_invites_screen.dart';
 import '../../features/analysis/presentation/analysis_screen.dart';
@@ -117,6 +118,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/inviti',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: AdvisorInvitesScreen()),
+          ),
+          GoRoute(
+            path: '/admin',
+            pageBuilder: (_, _) => const NoTransitionPage(child: AdminScreen()),
           ),
           GoRoute(
             path: '/compare',

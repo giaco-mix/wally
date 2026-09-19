@@ -90,6 +90,12 @@ class SupabaseAdvisorRepository implements AdvisorRepository {
       'client_label': (label == null || label.trim().isEmpty) ? null : label.trim(),
       'status': 'pending',
     }, onConflict: 'advisor_id,client_email');
+    // Chi invita diventa 'advisor' (solo se era 'retail': non tocca admin).
+    await _client
+        .from('profiles')
+        .update({'role': 'advisor'})
+        .eq('id', _uid)
+        .eq('role', 'retail');
   }
 
   @override
@@ -113,5 +119,11 @@ class SupabaseAdvisorRepository implements AdvisorRepository {
       'client_id': _uid,
       'status': 'active',
     }).eq('id', id);
+    // Chi accetta diventa 'client' (solo se era 'retail').
+    await _client
+        .from('profiles')
+        .update({'role': 'client'})
+        .eq('id', _uid)
+        .eq('role', 'retail');
   }
 }

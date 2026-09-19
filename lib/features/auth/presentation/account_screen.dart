@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../admin/providers/admin_providers.dart';
 import '../../advisor/providers/advisor_providers.dart';
 import '../providers/auth_providers.dart';
 
@@ -15,6 +16,7 @@ class AccountScreen extends ConsumerWidget {
     final email = session?.user.email;
     final inviteCount =
         ref.watch(pendingInvitesProvider).asData?.value.length ?? 0;
+    final isAdmin = ref.watch(isAdminProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
@@ -100,6 +102,16 @@ class AccountScreen extends ConsumerWidget {
                     subtitle: Text('$inviteCount in attesa'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.go('/inviti'),
+                  ),
+                ],
+                if (isAdmin) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.admin_panel_settings_outlined),
+                    title: const Text('Amministrazione'),
+                    subtitle: const Text('Utenti e ruoli'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.go('/admin'),
                   ),
                 ],
               ],

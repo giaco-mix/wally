@@ -338,3 +338,13 @@ drop policy if exists "holdings: lettura consulente" on public.holdings;
 create policy "holdings: lettura consulente" on public.holdings for select using (public.is_active_client(user_id));
 drop policy if exists "transactions: lettura consulente" on public.transactions;
 create policy "transactions: lettura consulente" on public.transactions for select using (public.is_active_client(user_id));
+
+-- === ruolo admin (elenco utenti + gestione ruoli) ==========================
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'admin');
+$$;
+drop policy if exists "profiles: admin vede tutti" on public.profiles;
+create policy "profiles: admin vede tutti" on public.profiles for select using (public.is_admin());
+drop policy if exists "profiles: admin aggiorna" on public.profiles;
+create policy "profiles: admin aggiorna" on public.profiles for update using (public.is_admin());
