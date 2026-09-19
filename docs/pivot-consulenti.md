@@ -93,43 +93,43 @@ base** che servirà: ogni miglioria lì vale anche per il B2B2C.
 > questo design serve a partire col codice quando decidiamo. Iniziamo con un
 > **prototipo in demo** (dati finti, nessun backend nuovo) per validare la UX.
 
-## D1. Modello dati (Supabase)
+## D1. Modello dati (Supabase) — IMPLEMENTATO
+> Fonte di verità: `supabase/migrations/20260917120000_advisor.sql` (in
+> `apply_all.sql`). Rispetto alla prima bozza, l'invito avviene **per email**
+> (il consulente non deve conoscere l'id del cliente).
 ```sql
--- Ruolo sul profilo esistente (default retail: non-breaking).
 alter table public.profiles
-  add column if not exists role text not null default 'retail';
-  -- valori: 'retail' | 'advisor' | 'client'
+  add column if not exists role text not null default 'retail'; -- retail|advisor|client
 
--- Relazione consulente ↔ cliente (un consulente ha molti clienti).
 create table if not exists public.advisor_clients (
-  advisor_id uuid not null references auth.users(id) on delete cascade,
-  client_id  uuid not null references auth.users(id) on delete cascade,
-  status text not null default 'pending', -- pending | active | revoked
-  created_at timestamptz not null default now(),
-  primary key (advisor_id, client_id)
+  id bigint generated always as identity primary key,
+  advisor_id   uuid not null references auth.users(id) on delete cascade,
+  client_email text not null,           -- invito indirizzato a un'email
+  client_label text,                    -- nome che il consulente dà al cliente
+  client_id    uuid references auth.users(id) on delete cascade, -- valorizzato all'accettazione
+  status       text not null default 'pending', -- pending|active|revoked
+  created_at   timestamptz not null default now(),
+  unique (advisor_id, client_email)
 );
-create index if not exists advisor_clients_advisor_idx
-  on public.advisor_clients(advisor_id);
 ```
 
 ## D2. RLS — il consulente vede i dati dei suoi clienti ATTIVI
-Per ogni tabella dati del cliente (`portfolios`, `holdings`, `transactions`,
-`plans`, `target_allocations`, `rebalance_settings`, `portfolio_snapshots`,
-`mood_checkins`) si **aggiunge** (senza rimuovere "vedi i tuoi") una policy di
-sola lettura per il consulente collegato:
+Funzione helper `is_active_client(uuid)` + policy **SELECT** additive. **v1
+implementata su `holdings` + `transactions`** (bastano per posizioni e
+rendimento); le altre tabelle si aggiungono con lo stesso pattern quando serve.
 ```sql
-create policy "<tab>: lettura consulente" on public.<tab>
-  for select using (
-    exists (
-      select 1 from public.advisor_clients ac
-      where ac.advisor_id = auth.uid()
-        and ac.client_id  = <tab>.user_id
-        and ac.status = 'active'
-    )
+create or replace function public.is_active_client(target uuid)
+returns boolean language sql stable security invoker as $$
+  select exists (
+    select 1 from public.advisor_clients ac
+    where ac.advisor_id = auth.uid() and ac.client_id = target and ac.status = 'active'
   );
+$$;
+create policy "holdings: lettura consulente" on public.holdings
+  for select using (public.is_active_client(user_id));
 ```
 > Solo **SELECT**: nella v1 il consulente **guarda**, non scrive i dati del cliente.
-> (Scrittura del consulente = fase successiva, con permessi espliciti.)
+> Il cliente vede/accetta gli inviti via `auth.jwt() ->> 'email'` (vedi migration).
 
 ## D3. Flusso di invito (collegamento)
 1. Il consulente inserisce l'email del cliente → riga `advisor_clients (advisor, client, 'pending')`.
