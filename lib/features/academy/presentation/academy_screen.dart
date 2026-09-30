@@ -33,12 +33,25 @@ class AcademyScreen extends StatelessWidget {
           ],
           Card(
             color: Theme.of(context).colorScheme.secondaryContainer,
-            child: ListTile(
-              leading: const Icon(Icons.school_outlined),
-              title: const Text('Vedi le strategie pronte'),
-              subtitle: const Text('Portafogli-modello da cui partire'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/strategie'),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.school_outlined),
+                  title: const Text('Vedi le strategie pronte'),
+                  subtitle: const Text('Portafogli-modello da cui partire'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/strategie'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.search),
+                  title: const Text('Trova lo strumento'),
+                  subtitle:
+                      const Text('Dall\'allocazione all\'ETF giusto'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/strumenti'),
+                ),
+              ],
             ),
           ),
         ],

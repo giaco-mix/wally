@@ -7,6 +7,7 @@ import '../../features/admin/presentation/admin_screen.dart';
 import '../../features/advisor/presentation/advisor_home_screen.dart';
 import '../../features/advisor/presentation/advisor_invites_screen.dart';
 import '../../features/analysis/presentation/analysis_screen.dart';
+import '../../features/instruments/presentation/instrument_finder_screen.dart';
 import '../../features/analysis/presentation/compare_screen.dart';
 import '../../features/analysis/presentation/income_screen.dart';
 import '../../features/analysis/presentation/stock_detail_screen.dart';
@@ -147,6 +148,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/academy',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: AcademyScreen()),
+          ),
+          GoRoute(
+            path: '/strumenti',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: InstrumentFinderScreen()),
           ),
           GoRoute(
             path: '/account',
