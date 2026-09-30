@@ -34,6 +34,10 @@ class Fundamentals {
     this.fundYield,
     this.ytdReturn,
     this.topHoldings = const [],
+    this.freeCashflow,
+    this.sharesOutstanding,
+    this.totalCash,
+    this.totalDebt,
   });
 
   final String symbol;
@@ -64,8 +68,20 @@ class Fundamentals {
   final double? ytdReturn; // 0..1
   final List<FundHolding> topHoldings;
 
+  // Campi per il calcolo del valore intrinseco (DCF), solo azioni.
+  final double? freeCashflow; // flusso di cassa libero (annuo)
+  final double? sharesOutstanding; // azioni in circolazione
+  final double? totalCash;
+  final double? totalDebt;
+
   /// Vero se è un fondo/ETF: niente metriche da singola azienda (P/E, ROE…).
   bool get isFund => quoteType == 'ETF' || quoteType == 'MUTUALFUND';
+
+  /// Prezzo corrente stimato (capitalizzazione / azioni), se disponibili.
+  double? get impliedPrice =>
+      (marketCap != null && sharesOutstanding != null && sharesOutstanding! > 0)
+          ? marketCap! / sharesOutstanding!
+          : null;
 
   static double? _raw(Map<String, dynamic>? m, String key) {
     final v = m?[key];
@@ -140,6 +156,10 @@ class Fundamentals {
       ytdReturn:
           _raw(keyStats, 'ytdReturn') ?? _raw(fundProfile, 'ytdReturn'),
       topHoldings: holdings,
+      freeCashflow: _raw(financial, 'freeCashflow'),
+      sharesOutstanding: _raw(keyStats, 'sharesOutstanding'),
+      totalCash: _raw(financial, 'totalCash'),
+      totalDebt: _raw(financial, 'totalDebt'),
     );
   }
 }

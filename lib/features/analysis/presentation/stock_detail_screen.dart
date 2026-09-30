@@ -5,6 +5,7 @@ import '../../../shared/format.dart';
 import '../../../shared/widgets/disclaimer_banner.dart';
 import '../../market/domain/fundamentals.dart';
 import '../../market/providers/market_providers.dart';
+import 'widgets/dcf_card.dart';
 import 'widgets/health_score_card.dart';
 import 'widgets/price_history_chart.dart';
 
@@ -92,6 +93,10 @@ class _Body extends StatelessWidget {
           const _FundNote()
         else
           HealthScoreCard(fundamentals: f),
+        if (DcfCard.canCompute(f)) ...[
+          const SizedBox(height: 16),
+          DcfCard(f: f),
+        ],
         const SizedBox(height: 16),
         PriceHistoryChart(symbol: f.symbol),
         const SizedBox(height: 16),
