@@ -48,6 +48,14 @@ class AccountScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.menu_book_outlined),
+                  title: const Text('Impara'),
+                  subtitle: const Text('Educazione: basi, approcci, fiscalità'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/academy'),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.school_outlined),
                   title: const Text('Strategie'),
                   subtitle: const Text('Come strutturare un piano + modelli'),

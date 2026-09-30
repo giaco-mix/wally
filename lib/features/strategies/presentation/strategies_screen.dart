@@ -51,6 +51,17 @@ class StrategiesScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Card(
+            color: Theme.of(context).colorScheme.secondaryContainer,
+            child: ListTile(
+              leading: const Icon(Icons.menu_book_outlined),
+              title: const Text('Nuovo? Parti da "Impara"'),
+              subtitle: const Text('Le basi, gli approcci, come scegliere'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.go('/academy'),
+            ),
+          ),
+          const SizedBox(height: 12),
           Text('Come strutturare un piano',
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 4),
