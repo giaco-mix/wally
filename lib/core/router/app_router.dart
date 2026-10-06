@@ -17,6 +17,7 @@ import '../../features/auth/presentation/account_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/auth/providers/auth_providers.dart';
+import '../../features/coach/presentation/achievements_screen.dart';
 import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/news/presentation/news_screen.dart';
@@ -102,6 +103,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/coach',
             pageBuilder: (_, _) => const NoTransitionPage(child: CoachScreen()),
+          ),
+          GoRoute(
+            path: '/traguardi',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: AchievementsScreen()),
           ),
           GoRoute(
             path: '/transactions',

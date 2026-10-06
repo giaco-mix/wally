@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../shared/format.dart';
 import '../../../shared/widgets/disclaimer_banner.dart';
@@ -7,6 +8,7 @@ import '../../plan/domain/risk_profile.dart';
 import '../../plan/providers/plan_providers.dart';
 import '../domain/behavior_tips.dart';
 import '../domain/mood.dart';
+import '../providers/achievements_provider.dart';
 import '../providers/coach_providers.dart';
 
 class CoachScreen extends ConsumerWidget {
@@ -27,6 +29,20 @@ class CoachScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           const _AdaptiveCard(),
           const _NotQuitterCard(),
+          const SizedBox(height: 16),
+          Builder(builder: (_) {
+            final a = ref.watch(achievementsProvider);
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.emoji_events_outlined),
+                title: const Text('Traguardi'),
+                subtitle: Text(
+                    '${a.unlocked}/${a.list.length} sbloccati · serie ${a.streak} mesi'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go('/traguardi'),
+              ),
+            );
+          }),
           const SizedBox(height: 16),
           const _TipCard(),
           const DisclaimerBanner(margin: EdgeInsets.only(top: 16)),
