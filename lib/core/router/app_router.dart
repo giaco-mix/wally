@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/academy/presentation/academy_screen.dart';
+import '../../features/academy/presentation/glossary_screen.dart';
+import '../../features/academy/presentation/tutor_screen.dart';
 import '../../features/admin/presentation/admin_screen.dart';
 import '../../features/advisor/presentation/advisor_home_screen.dart';
 import '../../features/advisor/presentation/advisor_invites_screen.dart';
@@ -153,6 +155,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/strumenti',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: InstrumentFinderScreen()),
+          ),
+          GoRoute(
+            path: '/glossario',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: GlossaryScreen()),
+          ),
+          GoRoute(
+            path: '/tutor',
+            pageBuilder: (_, _) => const NoTransitionPage(child: TutorScreen()),
           ),
           GoRoute(
             path: '/account',
