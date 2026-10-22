@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/disclaimer_banner.dart';
+import '../../../shared/widgets/hub.dart';
 import '../domain/lesson.dart';
 import '../providers/academy_progress.dart';
 import 'lesson_screen.dart';
@@ -50,61 +52,56 @@ class AcademyScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+          Text('Lezioni', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
           for (final category in academyCategories) ...[
-            Text(category, style: Theme.of(context).textTheme.titleMedium),
+            Text(category,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    )),
             const SizedBox(height: 8),
             for (final l in academyLessons.where((x) => x.category == category))
               _LessonCard(lesson: l, completed: done.contains(l.id)),
             const SizedBox(height: 16),
           ],
-          Card(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.school_outlined),
-                  title: const Text('Vedi le strategie pronte'),
-                  subtitle: const Text('Portafogli-modello da cui partire'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/strategie'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.search),
-                  title: const Text('Trova lo strumento'),
-                  subtitle:
-                      const Text('Dall\'allocazione all\'ETF giusto'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/strumenti'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.science_outlined),
-                  title: const Text('Laboratorio'),
-                  subtitle:
-                      const Text('Costruisci e confronta col benchmark'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/laboratorio'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.menu_book),
-                  title: const Text('Glossario'),
-                  subtitle: const Text('I termini spiegati semplici'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/glossario'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.forum_outlined),
-                  title: const Text('Fammi una domanda'),
-                  subtitle: const Text('Tutor (anteprima)'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/tutor'),
-                ),
-              ],
-            ),
+
+          const SectionHeader('Metti in pratica',
+              blurb: 'Dalla teoria al portafoglio: modelli, strumenti e backtest.'),
+          HubNavCard(
+            icon: Icons.school_outlined,
+            title: 'Strategie pronte',
+            subtitle: 'Portafogli-modello da cui partire',
+            onTap: () => context.go('/strategie'),
           ),
+          HubNavCard(
+            icon: Icons.search,
+            title: 'Trova lo strumento',
+            subtitle: 'Dall\'allocazione all\'ETF giusto',
+            onTap: () => context.go('/strumenti'),
+          ),
+          HubNavCard(
+            icon: Icons.science_outlined,
+            title: 'Laboratorio',
+            subtitle: 'Costruisci e confronta col benchmark',
+            onTap: () => context.go('/laboratorio'),
+          ),
+
+          const SectionHeader('Consulta quando serve',
+              blurb: 'Termini spiegati semplici e risposte veloci.'),
+          HubNavCard(
+            icon: Icons.menu_book,
+            title: 'Glossario',
+            subtitle: 'I termini spiegati semplici',
+            onTap: () => context.go('/glossario'),
+          ),
+          HubNavCard(
+            icon: Icons.forum_outlined,
+            title: 'Fammi una domanda',
+            subtitle: 'Tutor (anteprima)',
+            onTap: () => context.go('/tutor'),
+          ),
+
+          const DisclaimerBanner(margin: EdgeInsets.only(top: 8)),
         ],
       ),
     );

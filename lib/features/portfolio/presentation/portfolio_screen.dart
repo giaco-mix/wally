@@ -21,11 +21,6 @@ class PortfolioScreen extends ConsumerWidget {
         title: const Text('Portafoglio'),
         actions: [
           IconButton(
-            tooltip: 'Movimenti',
-            icon: const Icon(Icons.receipt_long_outlined),
-            onPressed: () => context.go('/transactions'),
-          ),
-          IconButton(
             tooltip: 'Importa da CSV',
             icon: const Icon(Icons.upload_file),
             onPressed: () => Navigator.of(context).push(
@@ -46,22 +41,68 @@ class PortfolioScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('Aggiungi'),
       ),
-      body: positions.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Errore: $e')),
-        data: (list) {
-          if (list.isEmpty) return const _EmptyState();
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(holdingsControllerProvider);
-              ref.invalidate(quotesProvider);
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
-              itemCount: list.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (_, i) => _PositionTile(position: list[i]),
+      body: Column(
+        children: [
+          const _PortfolioTools(),
+          Expanded(
+            child: positions.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Errore: $e')),
+              data: (list) {
+                if (list.isEmpty) {
+                  return _EmptyState(onAdd: () => showHoldingForm(context));
+                }
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(holdingsControllerProvider);
+                    ref.invalidate(quotesProvider);
+                  },
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 96),
+                    itemCount: list.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) => _PositionTile(position: list[i]),
+                  ),
+                );
+              },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Barra strumenti del portafoglio: raccoglie in un unico posto le funzioni
+/// che prima erano sparse (Analisi, Movimenti, Rendimento, Confronta, Rendite,
+/// Novità, costi/broker), così l'hub "Portafoglio" è autosufficiente.
+class _PortfolioTools extends StatelessWidget {
+  const _PortfolioTools();
+
+  @override
+  Widget build(BuildContext context) {
+    const tools = [
+      (Icons.insights_outlined, 'Analisi', '/analysis'),
+      (Icons.receipt_long_outlined, 'Movimenti', '/transactions'),
+      (Icons.trending_up, 'Rendimento', '/rendimento'),
+      (Icons.compare_arrows, 'Confronta', '/compare'),
+      (Icons.payments_outlined, 'Rendite', '/income'),
+      (Icons.article_outlined, 'Novità', '/news'),
+      (Icons.account_balance_outlined, 'Costi e broker', '/brokers'),
+    ];
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        itemCount: tools.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final (icon, label, path) = tools[i];
+          return ActionChip(
+            avatar: Icon(icon, size: 18),
+            label: Text(label),
+            onPressed: () => context.go(path),
           );
         },
       ),
@@ -172,7 +213,8 @@ class _PositionTile extends ConsumerWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({required this.onAdd});
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +233,12 @@ class _EmptyState extends StatelessWidget {
               'Aggiungi i tuoi titoli, ETF o liquidità per iniziare a '
               'monitorare e ribilanciare il portafoglio.',
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('Aggiungi la prima posizione'),
             ),
           ],
         ),

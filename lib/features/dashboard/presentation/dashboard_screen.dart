@@ -10,6 +10,7 @@ import '../../portfolio/domain/position.dart';
 import '../../portfolio/presentation/holdings_by_class_screen.dart';
 import '../../portfolio/providers/portfolio_providers.dart';
 import '../../rebalance/providers/rebalance_providers.dart';
+import '../providers/home_hint.dart';
 import 'widgets/allocation_pie.dart';
 import 'widgets/coach_card.dart';
 import 'widgets/costs_card.dart';
@@ -59,18 +60,7 @@ class DashboardScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Errore: $e')),
         data: (list) {
-          if (list.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text(
-                  'Aggiungi posizioni nella sezione Portafoglio per vedere '
-                  'qui la tua dashboard.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
+          if (list.isEmpty) return const _EmptyDashboard();
           return RefreshIndicator(
             onRefresh: refresh,
             child: _DashboardBody(positions: list),
@@ -180,6 +170,8 @@ class _DashboardBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final updatedAt = ref.watch(lastQuotesRefreshProvider);
+    final hintDismissed =
+        ref.watch(homeHintDismissedProvider).asData?.value ?? false;
     final totalValue = positions.fold<double>(0, (a, p) => a + p.marketValue);
     final totalCost = positions.fold<double>(0, (a, p) => a + p.costBasis);
     final gain = totalValue - totalCost;
@@ -217,6 +209,11 @@ class _DashboardBody extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (!hintDismissed)
+          _StartHereCard(
+            onClose: () =>
+                ref.read(homeHintDismissedProvider.notifier).dismiss(),
+          ),
         if (updatedAt != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -330,6 +327,109 @@ class _DashboardBody extends ConsumerWidget {
         const NewsCard(),
         const DisclaimerBanner(margin: EdgeInsets.only(top: 16)),
       ],
+    );
+  }
+}
+
+/// Guida al primo impatto: spiega in poche righe a cosa servono le aree
+/// principali. Chiudibile una volta per sempre (stato locale).
+class _StartHereCard extends StatelessWidget {
+  const _StartHereCard({required this.onClose});
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      color: scheme.secondaryContainer,
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.explore_outlined,
+                    size: 20, color: scheme.onSecondaryContainer),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Da dove comincio?',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSecondaryContainer,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Ho capito',
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: onClose,
+                ),
+              ],
+            ),
+            Text(
+              '• Dashboard: il colpo d\'occhio sul tuo patrimonio.\n'
+              '• Portafoglio: cosa possiedi, più movimenti e analisi.\n'
+              '• Ribilancia: cosa aggiustare per restare in rotta.\n'
+              '• Impara: lezioni, strumenti e laboratorio.\n'
+              '• Account: profilo, piano e impostazioni.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSecondaryContainer,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Stato vuoto della Dashboard (nessuna posizione): invito all'azione invece
+/// di un testo muto.
+class _EmptyDashboard extends StatelessWidget {
+  const _EmptyDashboard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.rocket_launch_outlined, size: 64),
+            const SizedBox(height: 16),
+            Text('Benvenuto in Wally',
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            const Text(
+              'Aggiungi le tue posizioni per vedere qui la tua dashboard, '
+              'oppure parti dalle basi con Impara.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => context.go('/portfolio'),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Aggiungi posizioni'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.go('/academy'),
+                  icon: const Icon(Icons.school_outlined),
+                  label: const Text('Scopri Impara'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

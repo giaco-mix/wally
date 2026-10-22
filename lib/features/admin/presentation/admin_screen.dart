@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../domain/app_user.dart';
 import '../providers/admin_providers.dart';
@@ -14,6 +15,19 @@ class AdminScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final role = ref.watch(currentUserRoleProvider);
+    // Finché il ruolo non è risolto, evita di interrogare adminUsersProvider
+    // (che per un non-admin restituirebbe un errore RLS grezzo).
+    return role.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => const _Denied(),
+      data: (r) => r == 'admin' ? _adminBody(context, ref) : const _Denied(),
+    );
+  }
+
+  Widget _adminBody(BuildContext context, WidgetRef ref) {
     final users = ref.watch(adminUsersProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Amministrazione')),
@@ -63,6 +77,43 @@ class AdminScreen extends ConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Mostrato a chi raggiunge /admin senza essere amministratore (es. via URL):
+/// un messaggio pulito invece dell'errore RLS.
+class _Denied extends StatelessWidget {
+  const _Denied();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Amministrazione')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock_outline, size: 64),
+              const SizedBox(height: 16),
+              Text('Accesso riservato',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              const Text(
+                'Questa area è disponibile solo agli amministratori.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: () => context.go('/'),
+                child: const Text('Torna alla Dashboard'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

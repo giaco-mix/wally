@@ -3,10 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../shared/widgets/hub.dart';
 import '../../admin/providers/admin_providers.dart';
 import '../../advisor/providers/advisor_providers.dart';
 import '../providers/auth_providers.dart';
 
+/// Hub "Account": profilo + impostazioni personali, organizzato in sezioni.
+/// Le funzioni operative (movimenti, novità, broker, strategie…) vivono nei
+/// rispettivi hub (Portafoglio, Impara): qui restano profilo, crescita,
+/// consulenza (adattata al ruolo) e sistema.
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
@@ -16,13 +21,15 @@ class AccountScreen extends ConsumerWidget {
     final email = session?.user.email;
     final inviteCount =
         ref.watch(pendingInvitesProvider).asData?.value.length ?? 0;
-    final isAdmin = ref.watch(isAdminProvider);
+    final role = ref.watch(currentUserRoleProvider).asData?.value ?? 'retail';
+    final isAdmin = role == 'admin';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // ── Profilo ────────────────────────────────────────────────────
           Card(
             child: ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person)),
@@ -36,95 +43,38 @@ class AccountScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.self_improvement),
-                  title: const Text('Wally Coach'),
-                  subtitle: const Text('Check-in e supporto comportamentale'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/coach'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.menu_book_outlined),
-                  title: const Text('Impara'),
-                  subtitle: const Text('Educazione: basi, approcci, fiscalità'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/academy'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.school_outlined),
-                  title: const Text('Strategie'),
-                  subtitle: const Text('Come strutturare un piano + modelli'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/strategie'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.receipt_long_outlined),
-                  title: const Text('Movimenti'),
-                  subtitle: const Text('Registro operazioni (PAC, extra, vendite)'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/transactions'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.article_outlined),
-                  title: const Text('Novità sul portafoglio'),
-                  subtitle: const Text('Notizie sui tuoi titoli'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/news'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.account_balance_outlined),
-                  title: const Text('Piattaforme e commissioni'),
-                  subtitle: const Text('Gestisci broker e costi'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/brokers'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.flag_outlined),
-                  title: const Text('Il tuo piano'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/plan'),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.groups_outlined),
-                  title: const Text('Modalità consulente'),
-                  subtitle:
-                      const Text('Segui i portafogli dei tuoi clienti'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.go('/consulente'),
-                ),
-                if (inviteCount > 0) ...[
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.handshake_outlined),
-                    title: const Text('Inviti da consulente'),
-                    subtitle: Text('$inviteCount in attesa'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.go('/inviti'),
-                  ),
-                ],
-                if (isAdmin) ...[
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.admin_panel_settings_outlined),
-                    title: const Text('Amministrazione'),
-                    subtitle: const Text('Utenti e ruoli'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.go('/admin'),
-                  ),
-                ],
-              ],
-            ),
+
+          // ── Cresci con Wally ───────────────────────────────────────────
+          const SectionHeader('Cresci con Wally',
+              blurb: 'Abitudini, obiettivi e disciplina.'),
+          HubNavCard(
+            icon: Icons.self_improvement,
+            title: 'Wally Coach',
+            subtitle: 'Check-in e supporto comportamentale',
+            onTap: () => context.go('/coach'),
           ),
+          HubNavCard(
+            icon: Icons.flag_outlined,
+            title: 'Il tuo piano',
+            subtitle: 'Obiettivo, rischio e PAC',
+            onTap: () => context.go('/plan'),
+          ),
+
+          // ── Consulenza (adattata al ruolo) ─────────────────────────────
+          const SectionHeader('Consulenza'),
+          ..._consulenza(context, role, inviteCount),
+
+          // ── Sistema (solo admin) ───────────────────────────────────────
+          if (isAdmin) ...[
+            const SectionHeader('Sistema'),
+            HubNavCard(
+              icon: Icons.admin_panel_settings_outlined,
+              title: 'Amministrazione',
+              subtitle: 'Utenti e ruoli',
+              onTap: () => context.go('/admin'),
+            ),
+          ],
+
           const SizedBox(height: 16),
           if (AppConfig.isConfigured)
             FilledButton.tonalIcon(
@@ -146,6 +96,49 @@ class AccountScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Voci della sezione Consulenza in base al ruolo dell'utente.
+  List<Widget> _consulenza(BuildContext context, String role, int inviteCount) {
+    switch (role) {
+      case 'advisor':
+        return [
+          HubNavCard(
+            icon: Icons.groups_outlined,
+            title: 'I tuoi clienti',
+            subtitle: 'Libro clienti e portafogli in sola lettura',
+            onTap: () => context.go('/consulente'),
+          ),
+        ];
+      case 'client':
+        return [
+          HubNavCard(
+            icon: Icons.handshake_outlined,
+            title: 'Il mio consulente',
+            subtitle: inviteCount > 0
+                ? '$inviteCount invito/i in attesa · accesso in sola lettura'
+                : 'Inviti e accesso in sola lettura',
+            onTap: () => context.go('/inviti'),
+          ),
+        ];
+      default: // retail, admin
+        return [
+          HubNavCard(
+            icon: Icons.groups_outlined,
+            title: 'Diventa consulente',
+            subtitle: 'Segui i portafogli dei tuoi clienti in sola lettura. '
+                'Invitando il primo cliente diventerai consulente.',
+            onTap: () => context.go('/consulente'),
+          ),
+          if (inviteCount > 0)
+            HubNavCard(
+              icon: Icons.handshake_outlined,
+              title: 'Inviti da consulente',
+              subtitle: '$inviteCount in attesa',
+              onTap: () => context.go('/inviti'),
+            ),
+        ];
+    }
   }
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {

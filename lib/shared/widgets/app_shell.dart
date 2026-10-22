@@ -3,42 +3,104 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/config/app_config.dart';
+import '../../features/admin/providers/admin_providers.dart';
 
 class _Destination {
-  const _Destination(this.label, this.icon, this.selectedIcon, this.path);
+  const _Destination(
+    this.label,
+    this.icon,
+    this.selectedIcon,
+    this.path,
+    this.tooltip,
+  );
   final String label;
   final IconData icon;
   final IconData selectedIcon;
   final String path;
+  final String tooltip;
 }
 
-const _destinations = [
-  _Destination('Dashboard', Icons.dashboard_outlined, Icons.dashboard, '/'),
-  _Destination('Portafoglio', Icons.account_balance_wallet_outlined,
-      Icons.account_balance_wallet, '/portfolio'),
-  _Destination('Ribilancia', Icons.balance_outlined, Icons.balance, '/rebalance'),
-  _Destination('Analisi', Icons.insights_outlined, Icons.insights, '/analysis'),
-  _Destination('Account', Icons.person_outline, Icons.person, '/account'),
-];
+/// Destinazioni di primo livello, in funzione del ruolo. Una sola lista per
+/// mobile (NavigationBar) e wide (NavigationRail) per evitare incoerenze.
+///
+/// - retail / client / admin: Dashboard · Portafoglio · Ribilancia · Impara · Account
+/// - advisor: in più "Clienti" (il suo book a un tap), subito dopo Dashboard.
+///
+/// Analisi, Movimenti, Rendimento, Novità e Piattaforme vivono dentro l'hub
+/// Portafoglio; Strategie/Strumenti/Laboratorio/Glossario/Tutor dentro Impara.
+List<_Destination> _destinationsFor(String role) {
+  return [
+    const _Destination('Dashboard', Icons.dashboard_outlined, Icons.dashboard,
+        '/', 'Colpo d\'occhio sul tuo patrimonio'),
+    if (role == 'advisor')
+      const _Destination('Clienti', Icons.groups_outlined, Icons.groups,
+          '/consulente', 'I portafogli dei tuoi clienti (sola lettura)'),
+    const _Destination(
+        'Portafoglio',
+        Icons.account_balance_wallet_outlined,
+        Icons.account_balance_wallet,
+        '/portfolio',
+        'Cosa possiedi: posizioni, movimenti, analisi'),
+    const _Destination('Ribilancia', Icons.balance_outlined, Icons.balance,
+        '/rebalance', 'Cosa aggiustare per restare in rotta'),
+    const _Destination('Impara', Icons.school_outlined, Icons.school,
+        '/academy', 'Lezioni, strumenti e laboratorio'),
+    const _Destination('Account', Icons.person_outline, Icons.person,
+        '/account', 'Profilo, piano e impostazioni'),
+  ];
+}
+
+/// Mappa una qualsiasi rotta sulla destinazione di primo livello che la
+/// "possiede", così la voce giusta resta evidenziata anche nelle sotto-pagine.
+String _sectionPath(String location, bool advisor) {
+  if (location == '/') return '/';
+  bool match(String p) => location == p || location.startsWith('$p/');
+
+  if (match('/consulente') || match('/inviti')) {
+    return advisor ? '/consulente' : '/account';
+  }
+  if (match('/portfolio') ||
+      match('/transactions') ||
+      match('/rendimento') ||
+      match('/analysis') ||
+      match('/compare') ||
+      match('/income') ||
+      match('/news') ||
+      match('/brokers')) {
+    return '/portfolio';
+  }
+  if (match('/rebalance') || match('/notifications')) return '/rebalance';
+  if (match('/academy') ||
+      match('/strategie') ||
+      match('/strumenti') ||
+      match('/laboratorio') ||
+      match('/glossario') ||
+      match('/tutor')) {
+    return '/academy';
+  }
+  // Account e ciò che ci sta sotto (Coach, Traguardi, Piano, Admin).
+  return '/account';
+}
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.child});
   final Widget child;
 
-  int _indexFor(String location) {
-    final i = _destinations.lastIndexWhere(
-      (d) => d.path == '/' ? location == '/' : location.startsWith(d.path),
-    );
+  int _indexFor(List<_Destination> dests, String location, bool advisor) {
+    final path = _sectionPath(location, advisor);
+    final i = dests.indexWhere((d) => d.path == path);
     return i < 0 ? 0 : i;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final role = ref.watch(currentUserRoleProvider).asData?.value ?? 'retail';
+    final destinations = _destinationsFor(role);
     final location = GoRouterState.of(context).uri.path;
-    final index = _indexFor(location);
+    final index = _indexFor(destinations, location, role == 'advisor');
     final isWide = MediaQuery.sizeOf(context).width >= 760;
 
-    void go(int i) => context.go(_destinations[i].path);
+    void go(int i) => context.go(destinations[i].path);
 
     if (isWide) {
       return Scaffold(
@@ -53,10 +115,11 @@ class AppShell extends ConsumerWidget {
                 child: Icon(Icons.savings, size: 32),
               ),
               destinations: [
-                for (final d in _destinations)
+                for (final d in destinations)
                   NavigationRailDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.selectedIcon),
+                    icon: Tooltip(message: d.tooltip, child: Icon(d.icon)),
+                    selectedIcon:
+                        Tooltip(message: d.tooltip, child: Icon(d.selectedIcon)),
                     label: Text(d.label),
                   ),
               ],
@@ -74,11 +137,12 @@ class AppShell extends ConsumerWidget {
         selectedIndex: index,
         onDestinationSelected: go,
         destinations: [
-          for (final d in _destinations)
+          for (final d in destinations)
             NavigationDestination(
               icon: Icon(d.icon),
               selectedIcon: Icon(d.selectedIcon),
               label: d.label,
+              tooltip: d.tooltip,
             ),
         ],
       ),
@@ -136,4 +200,3 @@ class _DemoBanner extends StatelessWidget {
     );
   }
 }
-
