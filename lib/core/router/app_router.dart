@@ -47,7 +47,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == '/login' || state.matchedLocation == '/signup';
       if (!loggedIn) return loggingIn ? null : '/login';
       if (loggingIn) return '/';
-      return null;
+      // Compatibilità: i vecchi path EN reindirizzano ai nuovi path IT, così
+      // link/preferiti pre-rinomina continuano a funzionare.
+      return _legacyRedirect(state.matchedLocation);
     },
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
@@ -191,4 +193,32 @@ class _AuthListenable extends ChangeNotifier {
   _AuthListenable(Ref ref) {
     ref.listen(isLoggedInProvider, (_, _) => notifyListeners());
   }
+}
+
+/// Mappa i vecchi path (prima della rinomina in italiano) sui nuovi, incluse
+/// le sotto-rotte (es. /analysis/AAPL → /analisi/AAPL). Restituisce null se il
+/// path è già valido.
+const _legacyPaths = {
+  '/portfolio': '/portafoglio',
+  '/rebalance': '/ribilancia',
+  '/analysis': '/analisi',
+  '/plan': '/piano',
+  '/brokers': '/piattaforme',
+  '/notifications': '/avvisi',
+  '/transactions': '/movimenti',
+  '/compare': '/confronta',
+  '/income': '/rendite',
+  '/news': '/novita',
+  '/academy': '/impara',
+};
+
+String? _legacyRedirect(String location) {
+  final exact = _legacyPaths[location];
+  if (exact != null) return exact;
+  for (final e in _legacyPaths.entries) {
+    if (location.startsWith('${e.key}/')) {
+      return '${e.value}${location.substring(e.key.length)}';
+    }
+  }
+  return null;
 }
