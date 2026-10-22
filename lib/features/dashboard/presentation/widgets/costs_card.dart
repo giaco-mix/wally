@@ -32,7 +32,7 @@ class CostsCard extends ConsumerWidget {
                         style: Theme.of(context).textTheme.titleMedium),
                     const Spacer(),
                     TextButton(
-                      onPressed: () => context.go('/brokers'),
+                      onPressed: () => context.go('/piattaforme'),
                       child: const Text('Piattaforme'),
                     ),
                   ],

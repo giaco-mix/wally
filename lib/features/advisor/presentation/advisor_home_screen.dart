@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/format.dart';
+import '../../admin/providers/admin_providers.dart';
 import '../domain/advisor_client.dart';
 import '../providers/advisor_providers.dart';
 import 'advisor_client_screen.dart';
@@ -136,8 +137,12 @@ class AdvisorHomeScreen extends ConsumerWidget {
           .read(advisorRepositoryProvider)
           .invite(email.text, label.text);
       ref.invalidate(advisorClientsProvider);
+      // Il profilo può essere passato a 'advisor': aggiorna la navigazione
+      // (compare la voce "Clienti").
+      ref.invalidate(currentUserRoleProvider);
       messenger.showSnackBar(const SnackBar(
-          content: Text('Invito inviato. Comparirà quando il cliente accetta.')));
+          content: Text('Invito inviato: sei ora in Modalità consulente. '
+              'Il cliente comparirà quando accetta.')));
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('Errore: $e')));
     }

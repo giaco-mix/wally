@@ -156,7 +156,7 @@ class _NotificationBell extends StatelessWidget {
     final icon = IconButton(
       tooltip: 'Avvisi',
       icon: const Icon(Icons.notifications_outlined),
-      onPressed: () => context.go('/notifications'),
+      onPressed: () => context.go('/avvisi'),
     );
     if (count == 0) return icon;
     return Badge.count(count: count, child: icon);
@@ -416,12 +416,12 @@ class _EmptyDashboard extends StatelessWidget {
               alignment: WrapAlignment.center,
               children: [
                 FilledButton.icon(
-                  onPressed: () => context.go('/portfolio'),
+                  onPressed: () => context.go('/portafoglio'),
                   icon: const Icon(Icons.add),
                   label: const Text('Aggiungi posizioni'),
                 ),
                 FilledButton.tonalIcon(
-                  onPressed: () => context.go('/academy'),
+                  onPressed: () => context.go('/impara'),
                   icon: const Icon(Icons.school_outlined),
                   label: const Text('Scopri Impara'),
                 ),

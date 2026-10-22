@@ -58,7 +58,7 @@ class StrategiesScreen extends StatelessWidget {
               title: const Text('Nuovo? Parti da "Impara"'),
               subtitle: const Text('Le basi, gli approcci, come scegliere'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/academy'),
+              onTap: () => context.go('/impara'),
             ),
           ),
           const SizedBox(height: 12),

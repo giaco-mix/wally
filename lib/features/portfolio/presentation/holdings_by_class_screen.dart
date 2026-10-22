@@ -75,7 +75,7 @@ class _Tile extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => context.go('/analysis/${h.symbol}'),
+        onTap: () => context.go('/analisi/${h.symbol}'),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(

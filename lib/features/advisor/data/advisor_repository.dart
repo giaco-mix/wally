@@ -42,6 +42,13 @@ abstract class AdvisorRepository {
 
   /// Accetta un invito: collega il proprio id e mette 'active'.
   Future<void> acceptInvite(int id);
+
+  /// Consulenti che seguono ATTIVAMENTE l'utente corrente (lato cliente).
+  Future<List<AdvisorClientLink>> activeAdvisorsForMe();
+
+  /// Revoca l'accesso di un collegamento (lato cliente): mette 'revoked', così
+  /// `is_active_client` torna falso e il consulente perde la lettura.
+  Future<void> revoke(int id);
 }
 
 class SupabaseAdvisorRepository implements AdvisorRepository {
@@ -125,5 +132,30 @@ class SupabaseAdvisorRepository implements AdvisorRepository {
         .update({'role': 'client'})
         .eq('id', _uid)
         .eq('role', 'retail');
+  }
+
+  @override
+  Future<List<AdvisorClientLink>> activeAdvisorsForMe() async {
+    final email = _email;
+    if (email == null) return const [];
+    // La RLS cliente consente la SELECT per client_email = propria email.
+    final rows = await _client
+        .from('advisor_clients')
+        .select()
+        .eq('client_email', email.toLowerCase())
+        .eq('status', 'active');
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(AdvisorClientLink.fromMap)
+        .toList();
+  }
+
+  @override
+  Future<void> revoke(int id) async {
+    // La policy UPDATE del cliente (client_email = propria email) consente di
+    // impostare lo stato; non cambiamo client_email, quindi il check passa.
+    await _client
+        .from('advisor_clients')
+        .update({'status': 'revoked'}).eq('id', id);
   }
 }

@@ -82,13 +82,13 @@ class _PortfolioTools extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const tools = [
-      (Icons.insights_outlined, 'Analisi', '/analysis'),
-      (Icons.receipt_long_outlined, 'Movimenti', '/transactions'),
+      (Icons.insights_outlined, 'Analisi', '/analisi'),
+      (Icons.receipt_long_outlined, 'Movimenti', '/movimenti'),
       (Icons.trending_up, 'Rendimento', '/rendimento'),
-      (Icons.compare_arrows, 'Confronta', '/compare'),
-      (Icons.payments_outlined, 'Rendite', '/income'),
-      (Icons.article_outlined, 'Novità', '/news'),
-      (Icons.account_balance_outlined, 'Costi e broker', '/brokers'),
+      (Icons.compare_arrows, 'Confronta', '/confronta'),
+      (Icons.payments_outlined, 'Rendite', '/rendite'),
+      (Icons.article_outlined, 'Novità', '/novita'),
+      (Icons.account_balance_outlined, 'Costi e broker', '/piattaforme'),
     ];
     return SizedBox(
       height: 44,
@@ -184,7 +184,7 @@ class _PositionTile extends ConsumerWidget {
               title: const Text('Analisi fondamentale'),
               onTap: () {
                 Navigator.pop(context);
-                context.go('/analysis/${position.holding.symbol}');
+                context.go('/analisi/${position.holding.symbol}');
               },
             ),
             ListTile(

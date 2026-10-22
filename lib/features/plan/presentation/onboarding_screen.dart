@@ -139,7 +139,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
     try {
       await ref.read(planControllerProvider.notifier).save(plan);
-      if (mounted) context.go('/plan');
+      if (mounted) context.go('/piano');
     } finally {
       if (mounted) setState(() => _saving = false);
     }

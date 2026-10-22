@@ -25,12 +25,12 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
           IconButton(
             tooltip: 'Confronta fondi/ETF',
             icon: const Icon(Icons.compare_arrows),
-            onPressed: () => context.go('/compare'),
+            onPressed: () => context.go('/confronta'),
           ),
           IconButton(
             tooltip: 'Dividendi & rendita',
             icon: const Icon(Icons.payments_outlined),
-            onPressed: () => context.go('/income'),
+            onPressed: () => context.go('/rendite'),
           ),
         ],
       ),
@@ -75,7 +75,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                                   .join(' · '),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            onTap: () => context.go('/analysis/${r.symbol}'),
+                            onTap: () => context.go('/analisi/${r.symbol}'),
                           );
                         },
                       );

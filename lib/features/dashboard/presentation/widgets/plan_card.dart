@@ -50,7 +50,7 @@ class PlanCard extends ConsumerWidget {
         // Sintesi del piano esistente.
         return Card(
           child: InkWell(
-            onTap: () => context.go('/plan'),
+            onTap: () => context.go('/piano'),
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16),

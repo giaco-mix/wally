@@ -97,7 +97,7 @@ final notificationsProvider = Provider<List<WallyNotification>>((ref) {
       title: 'È ora di ribilanciare',
       body: 'Secondo la tua cadenza ${settings.frequency.label.toLowerCase()} '
           'è il momento di dare un\'occhiata e riportare il piano in equilibrio.',
-      route: '/rebalance',
+      route: '/ribilancia',
       actionLabel: 'Ribilancia',
     ));
   }
@@ -128,7 +128,7 @@ final notificationsProvider = Provider<List<WallyNotification>>((ref) {
             : 'Secondo la tua cadenza ${plan.frequency.label.toLowerCase()} è ora '
                 'del versamento. Registralo in Movimenti (puoi farti mettere il '
                 'prezzo di quel giorno con un tap) per tenere i rendimenti corretti.',
-        route: '/transactions',
+        route: '/movimenti',
         actionLabel: 'Registra',
       ));
     }
@@ -162,7 +162,7 @@ final notificationsProvider = Provider<List<WallyNotification>>((ref) {
           ? '${r.assetClass.label} sopra il target'
           : '${r.assetClass.label} sotto il target',
       body: body,
-      route: '/rebalance',
+      route: '/ribilancia',
       actionLabel: 'Vai al ribilanciamento',
     ));
   }

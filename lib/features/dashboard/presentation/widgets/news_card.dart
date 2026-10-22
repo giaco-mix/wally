@@ -18,7 +18,7 @@ class NewsCard extends ConsumerWidget {
         final top = list.take(3).toList();
         return Card(
           child: InkWell(
-            onTap: () => context.go('/news'),
+            onTap: () => context.go('/novita'),
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16),

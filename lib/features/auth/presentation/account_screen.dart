@@ -57,7 +57,7 @@ class AccountScreen extends ConsumerWidget {
             icon: Icons.flag_outlined,
             title: 'Il tuo piano',
             subtitle: 'Obiettivo, rischio e PAC',
-            onTap: () => context.go('/plan'),
+            onTap: () => context.go('/piano'),
           ),
 
           // ── Consulenza (adattata al ruolo) ─────────────────────────────

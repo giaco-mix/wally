@@ -61,7 +61,7 @@ class RebalanceAlert extends ConsumerWidget {
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton.icon(
-                onPressed: () => context.go('/rebalance'),
+                onPressed: () => context.go('/ribilancia'),
                 icon: const Icon(Icons.balance),
                 label: const Text('Vai al ribilanciamento'),
               ),

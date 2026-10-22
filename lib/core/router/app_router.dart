@@ -65,17 +65,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (_, _) => const NoTransitionPage(child: DashboardScreen()),
           ),
           GoRoute(
-            path: '/portfolio',
+            path: '/portafoglio',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: PortfolioScreen()),
           ),
           GoRoute(
-            path: '/rebalance',
+            path: '/ribilancia',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: RebalanceScreen()),
           ),
           GoRoute(
-            path: '/analysis',
+            path: '/analisi',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: AnalysisScreen()),
             routes: [
@@ -88,16 +88,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           GoRoute(
-            path: '/plan',
+            path: '/piano',
             pageBuilder: (_, _) => const NoTransitionPage(child: PlanScreen()),
           ),
           GoRoute(
-            path: '/brokers',
+            path: '/piattaforme',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: BrokersScreen()),
           ),
           GoRoute(
-            path: '/notifications',
+            path: '/avvisi',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: NotificationsScreen()),
           ),
@@ -111,7 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: AchievementsScreen()),
           ),
           GoRoute(
-            path: '/transactions',
+            path: '/movimenti',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: TransactionsScreen()),
           ),
@@ -135,17 +135,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (_, _) => const NoTransitionPage(child: AdminScreen()),
           ),
           GoRoute(
-            path: '/compare',
+            path: '/confronta',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: CompareScreen()),
           ),
           GoRoute(
-            path: '/income',
+            path: '/rendite',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: IncomeScreen()),
           ),
           GoRoute(
-            path: '/news',
+            path: '/novita',
             pageBuilder: (_, _) => const NoTransitionPage(child: NewsScreen()),
           ),
           GoRoute(
@@ -154,7 +154,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: StrategiesScreen()),
           ),
           GoRoute(
-            path: '/academy',
+            path: '/impara',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: AcademyScreen()),
           ),

@@ -39,12 +39,12 @@ List<_Destination> _destinationsFor(String role) {
         'Portafoglio',
         Icons.account_balance_wallet_outlined,
         Icons.account_balance_wallet,
-        '/portfolio',
+        '/portafoglio',
         'Cosa possiedi: posizioni, movimenti, analisi'),
     const _Destination('Ribilancia', Icons.balance_outlined, Icons.balance,
-        '/rebalance', 'Cosa aggiustare per restare in rotta'),
+        '/ribilancia', 'Cosa aggiustare per restare in rotta'),
     const _Destination('Impara', Icons.school_outlined, Icons.school,
-        '/academy', 'Lezioni, strumenti e laboratorio'),
+        '/impara', 'Lezioni, strumenti e laboratorio'),
     const _Destination('Account', Icons.person_outline, Icons.person,
         '/account', 'Profilo, piano e impostazioni'),
   ];
@@ -59,24 +59,24 @@ String _sectionPath(String location, bool advisor) {
   if (match('/consulente') || match('/inviti')) {
     return advisor ? '/consulente' : '/account';
   }
-  if (match('/portfolio') ||
-      match('/transactions') ||
+  if (match('/portafoglio') ||
+      match('/movimenti') ||
       match('/rendimento') ||
-      match('/analysis') ||
-      match('/compare') ||
-      match('/income') ||
-      match('/news') ||
-      match('/brokers')) {
-    return '/portfolio';
+      match('/analisi') ||
+      match('/confronta') ||
+      match('/rendite') ||
+      match('/novita') ||
+      match('/piattaforme')) {
+    return '/portafoglio';
   }
-  if (match('/rebalance') || match('/notifications')) return '/rebalance';
-  if (match('/academy') ||
+  if (match('/ribilancia') || match('/avvisi')) return '/ribilancia';
+  if (match('/impara') ||
       match('/strategie') ||
       match('/strumenti') ||
       match('/laboratorio') ||
       match('/glossario') ||
       match('/tutor')) {
-    return '/academy';
+    return '/impara';
   }
   // Account e ciò che ci sta sotto (Coach, Traguardi, Piano, Admin).
   return '/account';

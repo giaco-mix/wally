@@ -26,7 +26,7 @@ class TutorDemo {
           'regolari. Compri un po\' alla volta, senza dover indovinare il momento '
           'giusto: è la difesa numero uno contro il market timing. In Wally lo '
           'registri in Movimenti e vedi il rendimento di ogni versamento.',
-      route: '/academy',
+      route: '/impara',
       routeLabel: 'Vai a Impara',
     ),
     TutorAnswer(
@@ -56,7 +56,7 @@ class TutorDemo {
           'valori obiettivo quando si sono spostate. Meglio farlo con i nuovi '
           'versamenti (più efficiente), e con calma secondo una cadenza. In Wally '
           'trovi la sezione Ribilanciamento con la cadenza e gli scostamenti.',
-      route: '/rebalance',
+      route: '/ribilancia',
       routeLabel: 'Vai al ribilanciamento',
     ),
     TutorAnswer(
@@ -80,7 +80,7 @@ class TutorDemo {
           '(titoli di Stato al 12,5%), c\'è un\'imposta di bollo ~0,20% annuo, e le '
           'minusvalenze si possono compensare (con regole particolari per gli '
           'ETF). È materiale educativo, non consulenza fiscale.',
-      route: '/academy',
+      route: '/impara',
       routeLabel: 'Leggi la lezione',
     ),
     TutorAnswer(

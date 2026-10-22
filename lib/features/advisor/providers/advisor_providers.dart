@@ -60,6 +60,24 @@ final pendingInvitesProvider =
   return ref.watch(advisorRepositoryProvider).pendingInvitesForMe();
 });
 
+/// Consulenti che seguono attivamente l'utente corrente (lato cliente).
+final activeAdvisorsProvider =
+    FutureProvider<List<AdvisorClientLink>>((ref) async {
+  if (!AppConfig.isConfigured) return _demoActiveAdvisors;
+  return ref.watch(advisorRepositoryProvider).activeAdvisorsForMe();
+});
+
+/// Collegamento consulente dimostrativo (modalità demo), per vedere la vista
+/// "Il mio consulente" con la revoca.
+const List<AdvisorClientLink> _demoActiveAdvisors = [
+  AdvisorClientLink(
+    id: -1,
+    email: 'tu@esempio.it',
+    status: 'active',
+    label: 'Studio Rossi (demo)',
+  ),
+];
+
 // ── Dati dimostrativi (modalità demo) ───────────────────────────────────────
 
 Position _pos(

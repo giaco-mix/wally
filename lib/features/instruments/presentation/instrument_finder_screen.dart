@@ -89,7 +89,7 @@ class _InstrumentCard extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
-                onPressed: () => context.go('/analysis/${pick.ticker}'),
+                onPressed: () => context.go('/analisi/${pick.ticker}'),
                 icon: const Icon(Icons.insights, size: 18),
                 label: const Text('Analizza (live)'),
               ),
