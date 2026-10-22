@@ -51,7 +51,16 @@ class PriceHistory {
 enum HistoryRange {
   oneMonth('1M', '1mo', '1d'),
   sixMonths('6M', '6mo', '1d'),
-  oneYear('1A', '1y', '1wk');
+  oneYear('1A', '1y', '1wk'),
+  fiveYears('5A', '5y', '1wk');
+
+  /// Periodi per anno dello storico (per annualizzare le metriche di backtest).
+  double get periodsPerYear => switch (this) {
+        oneMonth => 252,
+        sixMonths => 252,
+        oneYear => 52,
+        fiveYears => 52,
+      };
 
   const HistoryRange(this.label, this.range, this.interval);
   final String label;

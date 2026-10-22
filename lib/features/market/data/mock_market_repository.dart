@@ -99,8 +99,12 @@ class MockMarketRepository implements MarketRepository {
       HistoryRange.oneMonth => 30,
       HistoryRange.sixMonths => 180,
       HistoryRange.oneYear => 365,
+      HistoryRange.fiveYears => 365 * 5,
     };
-    final step = range == HistoryRange.oneYear ? 7 : 1;
+    final step = (range == HistoryRange.oneYear ||
+            range == HistoryRange.fiveYears)
+        ? 7
+        : 1;
     final points = <PricePoint>[];
     final now = DateTime.now();
     var price = s.price * 0.85; // parte più in basso e cresce con rumore

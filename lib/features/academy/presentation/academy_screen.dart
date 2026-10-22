@@ -79,6 +79,15 @@ class AcademyScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.science_outlined),
+                  title: const Text('Laboratorio'),
+                  subtitle:
+                      const Text('Costruisci e confronta col benchmark'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/laboratorio'),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.menu_book),
                   title: const Text('Glossario'),
                   subtitle: const Text('I termini spiegati semplici'),

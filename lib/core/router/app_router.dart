@@ -10,6 +10,7 @@ import '../../features/advisor/presentation/advisor_home_screen.dart';
 import '../../features/advisor/presentation/advisor_invites_screen.dart';
 import '../../features/analysis/presentation/analysis_screen.dart';
 import '../../features/instruments/presentation/instrument_finder_screen.dart';
+import '../../features/lab/presentation/lab_screen.dart';
 import '../../features/analysis/presentation/compare_screen.dart';
 import '../../features/analysis/presentation/income_screen.dart';
 import '../../features/analysis/presentation/stock_detail_screen.dart';
@@ -161,6 +162,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/strumenti',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: InstrumentFinderScreen()),
+          ),
+          GoRoute(
+            path: '/laboratorio',
+            pageBuilder: (_, _) => const NoTransitionPage(child: LabScreen()),
           ),
           GoRoute(
             path: '/glossario',
